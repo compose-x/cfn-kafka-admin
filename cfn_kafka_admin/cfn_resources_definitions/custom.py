@@ -15,7 +15,7 @@ class KafkaTopic(CustomResource):
     Class to represent EWS::Kafka::Topic
     """
 
-    resource_type = "Custom::EwsKafkaTopic"
+    resource_type = "Custom::KafkaTopic"
 
     props = {
         "Name": (str, True),
@@ -36,7 +36,7 @@ class KafkaAcl(CustomResource):
     Class to represent Custom::KafkaACL
     """
 
-    resource_type = "Custom::EwsKafkaACL"
+    resource_type = "Custom::KafkaACL"
 
     props = {
         "BootstrapServers": (str, True),

@@ -30,8 +30,12 @@ Parameters:
     Default: none
     Description: Whether you want to use a different lambda layer for the Functions. Optional. Not recommended.
 
-  KafkaAdminSecretArn:
+  KafkaSecretsArns:
+    Type: CommaDelimitedList
+
+  FunctionsPrefix:
     Type: String
+    Default: none
 
   VpcId:
     Type: AWS::EC2::VPC::Id
@@ -42,6 +46,7 @@ Parameters:
 Conditions:
   PermissionsBoundaryCon: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
   OverrideLayerVersion: !Not [!Equals [!Ref LambdaLayerVersionArn, "none"]]
+  OverrideFunctionName: !Not [!Equals [!Ref FunctionsPrefix, "none"]]
 
 
 Resources:
@@ -64,8 +69,7 @@ Resources:
             Action:
               - "secretsmanager:GetSecret*"
             Effect: Allow
-            Resource:
-              - !Ref KafkaAdminSecretArn
+            Resource: !Ref KafkaSecretsArns
 
   functionsSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -103,7 +107,13 @@ Resources:
   kafkaTopicsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: cfn-kafka-admin-Topics
+      Tags:
+        Name: cfn-kafka-admin-Schemas
+        Source: https://github.com/compose-x/cfn-kafka-admin
+      FunctionName: !If
+        - OverrideFunctionName
+        - !Sub '${FunctionsPrefix}-Topics'
+        - cfn-kafka-admin-Topics
       Runtime: python3.8
       Handler: index.lambda_handler
       Timeout: 60
@@ -156,7 +166,13 @@ Resources:
   kafkaACLsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: cfn-kafka-admin-ACLs
+      Tags:
+        Name: cfn-kafka-admin-Schemas
+        Source: https://github.com/compose-x/cfn-kafka-admin
+      FunctionName: !If
+        - OverrideFunctionName
+        - !Sub '${FunctionsPrefix}-ACLs'
+        - cfn-kafka-admin-ACLs
       Runtime: python3.8
       Handler: index.lambda_handler
       Timeout: 60
@@ -209,7 +225,13 @@ Resources:
   kafkaSchemasFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: cfn-kafka-admin-Schemas
+      Tags:
+        Name: cfn-kafka-admin-Schemas
+        Source: https://github.com/compose-x/cfn-kafka-admin
+      FunctionName: !If
+        - OverrideFunctionName
+        - !Sub '${FunctionsPrefix}-Schemas'
+        - cfn-kafka-admin-Schemas
       Runtime: python3.8
       Handler: index.lambda_handler
       Role: !GetAtt kafkaSchemasFunctionRole.Arn
