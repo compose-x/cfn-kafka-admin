@@ -85,10 +85,11 @@ class KafkaTopic(ResourceProvider):
                 else self.cluster_info["bootstrap_servers"]
             )
             LOG.info(f"Cluster is {cluster_url}")
-            if not self.get("PartitionsCount") >= 1:
-                self.fail(
-                    "The number of partitions must be a strictly positive value >= 1"
-                )
+        except Exception as error:
+            self.fail(f"Failed to initialize - {str(error)}")
+        if not self.get("PartitionsCount") >= 1:
+            self.fail("The number of partitions must be a strictly positive value >= 1")
+        try:
             topic_name = create_new_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
@@ -102,7 +103,8 @@ class KafkaTopic(ResourceProvider):
             self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
             self.success(f"Created new topic {topic_name}")
         except errors.TopicAlreadyExistsError as error:
-            if environ.get("FAIL_IF_ALREADY_EXISTS", None):
+            if environ.get("FAIL_IF_ALREADY_EXISTS", None) is None:
+                LOG.info(f"{self.get('Name')} - Importing existing Topic")
                 self.physical_resource_id = self.get("Name")
                 self.set_attribute("Name", self.get("Name"))
                 self.set_attribute("Partitions", self.get("PartitionsCount"))
@@ -111,7 +113,7 @@ class KafkaTopic(ResourceProvider):
             else:
                 self.physical_resource_id = "could-not-create-nor-import"
                 self.fail(
-                    f"Failed to create the topic {self.get('Name')}, {str(error)}"
+                    f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
                 )
         except Exception as error:
             self.physical_resource_id = "could-not-create"
