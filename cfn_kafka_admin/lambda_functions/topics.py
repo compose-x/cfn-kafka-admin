@@ -4,6 +4,7 @@
 
 """Main module."""
 import logging
+from os import environ
 
 from aws_cfn_custom_resource_resolve_parser import handle
 from cfn_resource_provider import ResourceProvider
@@ -101,7 +102,7 @@ class KafkaTopic(ResourceProvider):
             self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
             self.success(f"Created new topic {topic_name}")
         except errors.TopicAlreadyExistsError as error:
-            if self.get("ImportIfExists") is True:
+            if environ.get("FAIL_IF_ALREADY_EXISTS", None):
                 self.physical_resource_id = self.get("Name")
                 self.set_attribute("Name", self.get("Name"))
                 self.set_attribute("Partitions", self.get("PartitionsCount"))

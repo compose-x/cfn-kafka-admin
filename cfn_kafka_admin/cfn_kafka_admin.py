@@ -411,4 +411,6 @@ class KafkaStack(object):
                     Host=policy.Host if policy.Host else r"*",
                 )
             )
-        self.template.add_resource(self.acl_class("ACLs", Policies=policies, **acl))
+        self.template.add_resource(
+            self.acl_class("ACLs", DeletionPolicy="Retain", Policies=policies, **acl)
+        )

@@ -103,6 +103,7 @@ Resources:
   kafkaTopicsFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: cfn-kafka-admin-Topics
       Runtime: python3.8
       Handler: index.lambda_handler
       Timeout: 60
@@ -155,6 +156,7 @@ Resources:
   kafkaACLsFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: cfn-kafka-admin-ACLs
       Runtime: python3.8
       Handler: index.lambda_handler
       Timeout: 60
@@ -207,6 +209,7 @@ Resources:
   kafkaSchemasFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: cfn-kafka-admin-Schemas
       Runtime: python3.8
       Handler: index.lambda_handler
       Role: !GetAtt kafkaSchemasFunctionRole.Arn
