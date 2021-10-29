@@ -46,8 +46,8 @@ phases:
       - cp layer-${SUFFIX}.zip layer.zip
 
       - |
-          aws --region eu-west-1 s3 cp layer-${SUFFIX}.zip s3://eu-west-1.${PUBLIC_FILES_BUCKET}/${LAYER_FILE} \
-            --sse AES256 --acl public-read --storage-class STANDARD_IA --no-progress;
+          aws --region eu-west-1 s3 cp layer-${SUFFIX}.zip s3://${PUBLIC_FILES_BUCKET}/${LAYER_FILE} \
+            --sse AES256 --acl public-read --storage-class STANDARD_IA --no-progress
       - envsubst '$LAYER_FILE' < .install/layer-macro-sar.yaml > cfn-kafka-admin-sar.yaml
       - |
           aws s3 cp cfn-kafka-admin-sar.yaml s3://${PUBLIC_FILES_BUCKET}/aws-sar/cfn-kafka-admin.yaml \
