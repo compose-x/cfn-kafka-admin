@@ -75,17 +75,19 @@ class KafkaTopic(ResourceProvider):
         Method to create a new Kafka topic
         :return:
         """
-        LOG.info(f"Attempting to create new topic {self.get('Name')}")
-        self.define_cluster_info()
-        cluster_url = (
-            self.cluster_info["bootstrap.servers"]
-            if self.get("IsConfluentKafka")
-            else self.cluster_info["bootstrap_servers"]
-        )
-        LOG.info(f"Cluster is {cluster_url}")
-        if not self.get("PartitionsCount") >= 1:
-            self.fail("The number of partitions must be a strictly positive value >= 1")
         try:
+            LOG.info(f"Attempting to create new topic {self.get('Name')}")
+            self.define_cluster_info()
+            cluster_url = (
+                self.cluster_info["bootstrap.servers"]
+                if self.get("IsConfluentKafka")
+                else self.cluster_info["bootstrap_servers"]
+            )
+            LOG.info(f"Cluster is {cluster_url}")
+            if not self.get("PartitionsCount") >= 1:
+                self.fail(
+                    "The number of partitions must be a strictly positive value >= 1"
+                )
             topic_name = create_new_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
@@ -118,8 +120,8 @@ class KafkaTopic(ResourceProvider):
         """
         :return:
         """
-        self.define_cluster_info()
         try:
+            self.define_cluster_info()
             update_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),

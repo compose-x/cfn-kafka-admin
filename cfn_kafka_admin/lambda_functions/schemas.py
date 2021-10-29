@@ -61,12 +61,12 @@ class KafkaSchema(ResourceProvider):
         """
         Creates a new Schema / Version in the Schema Registry
         """
-        registry = self.set_registry()
-        subject = self.get("Subject")
-        serializer = self.get("Serializer")
-        compatibility = self.get("CompatibilityMode")
-        schema_def = self.get("Definition")
         try:
+            registry = self.set_registry()
+            subject = self.get("Subject")
+            serializer = self.get("Serializer")
+            compatibility = self.get("CompatibilityMode")
+            schema_def = self.get("Definition")
             schema = registry.post_subject_version(
                 subject, schema_def, schema_type=serializer
             )
@@ -84,11 +84,11 @@ class KafkaSchema(ResourceProvider):
         """
         Updates the schema definition to create a new version. First, checks that the new definition is compatible.
         """
-        registry = self.set_registry()
-        subject = self.get("Subject")
-        serializer = self.get("Serializer")
-        schema_def = self.get("Definition")
         try:
+            registry = self.set_registry()
+            subject = self.get("Subject")
+            serializer = self.get("Serializer")
+            schema_def = self.get("Definition")
             compatible = registry.post_compatibility_subjects_versions(
                 subject_name=subject,
                 version_id="latest",

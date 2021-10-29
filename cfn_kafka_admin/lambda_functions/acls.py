@@ -69,10 +69,10 @@ class KafkaACL(ResourceProvider):
         Method to create a new Kafka topic
         :return:
         """
-        LOG.info(f"Connecting to {self.cluster_info['bootstrap_servers']}")
-        LOG.info(f"Attempting to create new ACLs {self.get('Name')}")
         try:
             self.define_cluster_info()
+            LOG.info(f"Connecting to {self.cluster_info['bootstrap_servers']}")
+            LOG.info(f"Attempting to create new ACLs {self.get('Name')}")
             topic_name = create_new_acls(
                 self.get("Policies"),
                 self.cluster_info,
