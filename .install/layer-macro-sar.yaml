@@ -248,3 +248,23 @@ Resources:
       Description: Kafka resources library for AWS CFN
       LayerName: cfn_kafka_admin
       LicenseInfo: LGPL-3.0-only
+
+
+Outputs:
+  TopicsFunctionArn:
+    Value: !GetAtt kafkaTopicsFunction.Arn
+
+  TopicsFunctionName:
+    Value: !Ref kafkaTopicsFunction
+
+  SchemasFunctionArn:
+    Value: !GetAtt kafkaSchemasFunction.Arn
+
+  SchemasFunctionName:
+    Value: !Ref kafkaSchemasFunction
+
+  ACLsFunctionArn:
+    Value: !GetAtt kafkaACLsFunction.Arn
+
+  ACLsFunctionName:
+    Value: !Ref kafkaACLsFunction

@@ -42,7 +42,7 @@ phases:
       - pip install $BUILD_WHL --no-cache-dir -t ${PY_BUILD}
       - cleanpy -af ${PY_BUILD}
       - zip -q -r9 layer-${SUFFIX}.zip python
-      - LAYER_FILE="layers/ecr_scan_reporter/layer-${SUFFIX}.zip"
+      - LAYER_FILE="layers/cfn_kafka_admin/layer-${SUFFIX}.zip"
       - cp layer-${SUFFIX}.zip layer.zip
 
       - |
