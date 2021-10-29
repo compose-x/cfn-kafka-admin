@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcompose-x%2Fcfn-kafka-admin.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcompose-x%2Fcfn-kafka-admin?ref=badge_shield)
+
 ===============
 cfn-kafka-admin
 ===============
@@ -24,3 +26,7 @@ Manage Kafka resources via AWS CFN
 
 * Free software: MPL-2.0
 * Documentation: https://cfn-kafka-admin.readthedocs.io.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcompose-x%2Fcfn-kafka-admin.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcompose-x%2Fcfn-kafka-admin?ref=badge_large)
