@@ -247,7 +247,7 @@ Resources:
       ContentUri: s3://eu-west-1.files.compose-x.io/${LAYER_FILE}
       Description: Kafka resources library for AWS CFN
       LayerName: cfn_kafka_admin
-      LicenseInfo: LGPL-3.0-only
+      LicenseInfo: MPL-2.0
 
 
 Outputs:
