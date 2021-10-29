@@ -1,0 +1,72 @@
+{
+  "typeName": "EWS::Kafka::Topic",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Resource to create Kafka topics in your cluster.",
+  "sourceUrl": "https://github.com/ews-network/cfn-kafka-acl-resource-provider",
+  "required": [
+    "Name",
+    "PartitionsCount"
+  ],
+  "properties": {
+    "Name": {
+      "$ref": "#/definitions/Name"
+    },
+    "PartitionsCount": {
+      "$ref": "#/definitions/PartitionsCount"
+    },
+    "ReplicationFactor": {
+      "$ref": "#/definitions/ReplicationFactor"
+    },
+    "BootstrapServers": {
+      "$ref": "ews-kafka-parameters.json#/definitions/BootstrapServers"
+    },
+    "SecurityProtocol": {
+      "$ref": "ews-kafka-parameters.json#/definitions/SecurityProtocol"
+    },
+    "SASLMechanism": {
+      "$ref": "ews-kafka-parameters.json#/definitions/SASLMechanism"
+    },
+    "SASLUsername": {
+      "$ref": "ews-kafka-parameters.json#/definitions/SASLUsername"
+    },
+    "SASLPassword": {
+      "$ref": "ews-kafka-parameters.json#/definitions/SASLPassword"
+    },
+    "Schema": {
+      "$ref": "#/definitions/TopicSchemas"
+    }
+  },
+  "definitions": {
+    "Name": {
+      "$comment": "The name of the kafka topic",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9_.-]+$",
+      "description": "Kafka topic name"
+    },
+    "PartitionsCount": {
+      "type": "integer",
+      "default": 1,
+      "description": "Number of partitions for the new Kafka topic"
+    },
+    "ReplicationFactor": {
+      "type": "integer",
+      "default": 3,
+      "description": "Kafka topic replication factor"
+    },
+    "TopicSchemas": {
+      "type": "object",
+      "properties": {
+        "Key": {
+          "$ref": "ews-kafka-schema.json#/definitions/TopicSchemaDef"
+        },
+        "Value": {
+          "$ref": "ews-kafka-schema.json#/definitions/TopicSchemaDef"
+        },
+        "Header": {
+          "$ref": "ews-kafka-schema.json#/definitions/TopicSchemaDef"
+        }
+      }
+    }
+  }
+}

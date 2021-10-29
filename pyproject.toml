@@ -1,0 +1,94 @@
+[tool.poetry]
+name = "cfn_kafka_admin"
+version = "0.0.1"
+description = "AWS CloudFormation Resources to manage Kafka"
+authors = ["johnpreston <john@compose-x.io>"]
+license = "MPL-2.0"
+classifiers = [
+  "Natural Language :: English",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+]
+readme = "README.rst"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+compose-x-common = {extras = ["aws"], version = "^0.2.2"}
+jsonschema = "^4.1.2"
+importlib-resources = "^5.3.0"
+PyYAML = "^6.0"
+troposphere = "^3.1.0"
+kafka-schema-registry-admin = "^0.1"
+datamodel-code-generator = {extras = ["http"], version = "^0.11.14"}
+aws-cfn-custom-resource-resolve-parser = "^0.2.1"
+kafka-python = "^2.0.2"
+cfn-resource-provider = "^1.0.7"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+isort = "^5.9.3"
+flake8 = "^3.9.2"
+coverage = "^5.5"
+pytest = "^6.2.4"
+pre-commit = "^2.14.0"
+tbump = "^6.4.0"
+cleanpy = "^0.3.1"
+
+[tool.poetry.scripts]
+aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
+
+
+[tool.tbump]
+github_url = "https://github.com/compose-x/ecs_composex"
+
+[tool.tbump.version]
+current = "0.17.1"
+
+regex = '''
+  (?P<major>\d+)
+  \.
+  (?P<minor>\d+)
+  \.
+  (?P<patch>\d+)
+  (?:(?P<rc>[\S]+))?
+  '''
+
+[tool.tbump.git]
+message_template = "Bump to {new_version}"
+tag_template = "v{new_version}"
+
+[[tool.tbump.file]]
+src = "pyproject.toml"
+
+[[tool.tbump.file]]
+src = "ecs_composex/__init__.py"
+
+[[tool.tbump.before_commit]]
+name = "Files format"
+cmd = "make conform"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+known_first_party = "kelvin"
+
+[tool.coverage.report]
+exclude_lines = [
+  "if __name__ == '__main__'"
+]
+[tool.coverage.run]
+omit = [
+  "*/cli.py"
+]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

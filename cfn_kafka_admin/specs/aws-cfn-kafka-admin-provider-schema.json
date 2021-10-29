@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "Globals"
+  ],
+  "typeName": "config",
+  "properties": {
+    "Globals": {
+      "$ref": "ews-kafka-parameters.json"
+    },
+    "Topics": {
+      "type": "object",
+      "properties": {
+        "Topics": {
+          "type": "array",
+          "items": {
+            "$ref": "ews-kafka-topic.json"
+          }
+        },
+        "ReplicationFactor": {
+          "$ref": "ews-kafka-topic.json#/definitions/ReplicationFactor"
+        },
+        "FunctionName": {
+          "type": "string",
+          "description": "Name or ARN of the Lambda function to use for Custom::KafkaTopic"
+        },
+        "DeletionPolicy": {
+          "type": "string",
+          "enum": [
+            "Retain",
+            "Delete"
+          ],
+          "default": "Retain"
+        },
+        "ImportExisting": {
+          "type": "boolean",
+          "description": "Whether to import existing topics on Create. Fails if set to false",
+          "default": true
+        }
+      }
+    },
+    "ACLs": {
+      "type": "object",
+      "properties": {
+        "Policies": {
+          "$ref": "ews-kafka-acl.json#/properties/Policies"
+        },
+        "FunctionName": {
+          "type": "string",
+          "description": "Name or ARN of the Lambda function to use for Custom::KafkaACL"
+        }
+      }
+    },
+    "Schemas": {
+      "type": "object",
+      "properties": {
+        "FunctionName": {
+          "type": "string",
+          "description": "Name or ARN of the Schema Registry function to use"
+        },
+        "RegistryUrl": {
+          "type": "string"
+        },
+        "RegistryUsername": {
+          "$ref": "ews-kafka-parameters.json#/definitions/RegistryUsername"
+        },
+        "RegistryPassword": {
+          "$ref": "ews-kafka-parameters.json#/definitions/RegistryPassword"
+        },
+        "RegistryUserInfo": {
+          "$ref": "ews-kafka-parameters.json#/definitions/RegistryUserInfo"
+        },
+        "CompatibilityMode": {
+          "$ref": "ews-kafka-schema.json#/definitions/CompatibilityMode"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "SchemasDef": {
+      "$ref": "ews-kafka-schema.json"
+    },
+    "AclsModel": {
+      "$ref": "ews-kafka-acl.json"
+    }
+  }
+}

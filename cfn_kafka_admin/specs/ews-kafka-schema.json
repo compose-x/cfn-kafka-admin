@@ -1,0 +1,91 @@
+{
+  "typeName": "EWS::Kafka::Schema",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Resource to create Kafka topics in your cluster.",
+  "sourceUrl": "https://github.com/compose-x/cfn_kafka_admin",
+  "properties": {
+    "RegistryUrl": {
+      "$ref": "ews-kafka-parameters.json#/definitions/RegistryUrl"
+    },
+    "RegistryUsername": {
+      "$ref": "ews-kafka-parameters.json#/definitions/RegistryUsername"
+    },
+    "RegistryPassword": {
+      "$ref": "ews-kafka-parameters.json#/definitions/RegistryPassword"
+    },
+    "RegistryUserInfo": {
+      "$ref": "ews-kafka-parameters.json#/definitions/RegistryUserInfo"
+    },
+    "Subject": {
+      "type": "string"
+    },
+    "Serializer": {
+      "$ref": "#/definitions/SerializerDef"
+    },
+    "Definition": {
+      "type": [
+        "string",
+        "object"
+      ]
+    },
+    "CompatibilityMode": {
+      "$ref": "#/definitions/CompatibilityMode"
+    },
+    "ServiceToken": {
+      "type": "string",
+      "description": "The Lambda Function ARN"
+    },
+    "PermanentlyDelete": {
+      "type": "boolean",
+      "description": "If set to true, the Schema is set to hard delete. Use carefully",
+      "default": false
+    }
+  },
+  "definitions": {
+    "CompatibilityMode": {
+      "type": "string",
+      "enum": [
+        "BACKWARD",
+        "BACKWARD_TRANSITIVE",
+        "FORWARD",
+        "FORWARD_TRANSITIVE",
+        "FULL",
+        "FULL_TRANSITIVE",
+        "NONE"
+      ],
+      "default": "NONE"
+    },
+    "SerializerDef": {
+      "type": "string",
+      "enum": [
+        "AVRO",
+        "JSON",
+        "PROTOBUF"
+      ]
+    },
+    "TopicSchemaDef": {
+      "type": "object",
+      "required": [
+        "Serializer"
+      ],
+      "properties": {
+        "Serializer": {
+          "$ref": "#/definitions/SerializerDef"
+        },
+        "Definition": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "CompatibilityMode": {
+          "$ref": "#/definitions/CompatibilityMode"
+        }
+      }
+    }
+  }
+}

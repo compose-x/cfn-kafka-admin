@@ -1,0 +1,95 @@
+{
+  "typeName": "EWS::Kafka::ACL",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Resource to create Kafka topics in your cluster.",
+  "sourceUrl": "https://github.com/ews-network/cfn-kafka-topic-resource-provider",
+  "properties": {
+    "Policies": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/PolicyDef"
+      }
+    }
+  },
+  "definitions": {
+    "PolicyDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Resource",
+        "Principal",
+        "ResourceType",
+        "Action",
+        "Effect"
+      ],
+      "properties": {
+        "Resource": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_.-]+$",
+          "description": "Name of the resource to apply the ACL for",
+          "$comment": "LITERAL or PREFIX value for the resource"
+        },
+        "PatternType": {
+          "type": "string",
+          "pattern": "^[A-Z]+$",
+          "description": "Pattern type",
+          "$comment": "LITERAL or PREFIXED",
+          "enum": [
+            "LITERAL",
+            "PREFIXED",
+            "MATCH"
+          ],
+          "default": "LITERAL"
+        },
+        "Principal": {
+          "type": "string",
+          "description": "Kafka user to apply the ACLs for.",
+          "$comment": "When using Confluent Kafka cloud, use the service account ID"
+        },
+        "ResourceType": {
+          "type": "string",
+          "description": "Kafka user to apply the ACLs for.",
+          "enum": [
+            "CLUSTER",
+            "DELEGATION_TOKEN",
+            "GROUP",
+            "TOPIC",
+            "TRANSACTIONAL_ID"
+          ]
+        },
+        "Action": {
+          "type": "string",
+          "description": "Access action allowed.",
+          "enum": [
+            "ALL",
+            "READ",
+            "WRITE",
+            "CREATE",
+            "DELETE",
+            "ALTER",
+            "DESCRIBE",
+            "CLUSTER_ACTION",
+            "DESCRIBE_CONFIGS",
+            "ALTER_CONFIGS",
+            "IDEMPOTENT_WRITE"
+          ]
+        },
+        "Effect": {
+          "type": "string",
+          "description": "Effect for the ACL.",
+          "$comment": "Whether you allow or deny the access",
+          "enum": [
+            "DENY",
+            "ALLOW"
+          ]
+        },
+        "Host": {
+          "type": "string",
+          "description": "Specify the host for the ACL. Defaults to '*'",
+          "default": "*"
+        }
+      }
+    }
+  }
+}

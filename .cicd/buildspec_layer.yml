@@ -1,0 +1,57 @@
+---
+# BUILDSPEC to merge the .zip of different runtimes for the final layer
+version: 0.2
+env:
+  shell: /bin/bash
+  variables:
+    USE_EPOCH: 0
+    DIND_VOL_PATH: /var/lib/docker/volumes/agent-resources_user_volume/_data/srcDownload/src
+    PY_VERSION: 3.8
+    PUBLIC_FILES_BUCKET: files.compose-x.io
+
+phases:
+  install:
+    runtime-versions:
+      python: "$(echo $PY_VERSION)"
+    commands:
+      - if [ -z ${CODEBUILD_RESOLVED_SOURCE_VERSION} ]; then USE_EPOCH=1; fi
+      - COMMIT_HASH=${CODEBUILD_RESOLVED_SOURCE_VERSION::7}
+      - EPOCH=`date +'%Y%m%d-%H-%M'`
+      - SUFFIX=${COMMIT_HASH:-$EPOCH}
+      - if [ $USE_EPOCH -eq 1 ]; then SUFFIX=$EPOCH; fi
+      - (pip --version && pip install pip -U --no-cache-dir) && pip install wheel --no-cache-dir
+      - python -m pip install poetry
+      - POETRY_BIN_FILE=`find /root/.pyenv -name poetry -type f 2>/dev/null`
+      - echo $POETRY_BIN_FILE
+      - POETRY_BIN_DIR=$(dirname "${POETRY_BIN_FILE}")
+      - PATH=$POETRY_BIN_DIR:$PATH
+      - poetry env use system
+      - poetry install
+      - POETRY_ENV=`poetry env info --path`
+      - echo $POETRY_ENV
+      - PATH=$POETRY_ENV/bin:$PATH
+  build:
+    commands:
+#      - make package
+      - python --version
+      - poetry build
+      - BUILD_WHL=`find . -name "cfn_kafka_admin*.whl" -type f`
+      - echo $BUILD_WHL
+      - PY_BUILD=python/lib/python${PY_VERSION}/site-packages/
+      - mkdir -p ${PY_BUILD}
+      - pip install $BUILD_WHL --no-cache-dir -t ${PY_BUILD}
+      - cleanpy -af ${PY_BUILD}
+      - zip -q -r9 layer-${SUFFIX}.zip python
+      - LAYER_FILE="layers/ecr_scan_reporter/layer-${SUFFIX}.zip"
+      - cp layer-${SUFFIX}.zip layer.zip
+
+      - |
+          aws --region eu-west-1 s3 cp layer-${SUFFIX}.zip s3://eu-west-1.${PUBLIC_FILES_BUCKET}/${LAYER_FILE} \
+            --sse AES256 --acl public-read --storage-class STANDARD_IA --no-progress;
+      - envsubst '$LAYER_FILE' < .install/layer-macro-sar.yaml > cfn-kafka-admin-sar.yaml
+      - |
+          aws s3 cp cfn-kafka-admin-sar.yaml s3://${PUBLIC_FILES_BUCKET}/aws-sar/cfn-kafka-admin.yaml \
+            --sse AES256 --acl public-read --storage-class STANDARD_IA
+artifacts:
+  files:
+    - cfn-kafka-admin-sar.yaml

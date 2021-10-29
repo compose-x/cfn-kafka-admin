@@ -1,0 +1,90 @@
+{
+  "typeName": "EWS::Kafka::Parameters",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Generic properties used to connect to Kafka cluster.",
+  "sourceUrl": "https://github.com/ews-network/aws_cfn_kafka_definitions",
+  "properties": {
+    "BootstrapServers": {
+      "$ref": "#/definitions/BootstrapServers"
+    },
+    "SecurityProtocol": {
+      "$ref": "#/definitions/SecurityProtocol"
+    },
+    "SASLMechanism": {
+      "$ref": "#/definitions/SASLMechanism"
+    },
+    "SASLUsername": {
+      "$ref": "#/definitions/SASLUsername"
+    },
+    "SASLPassword": {
+      "$ref": "#/definitions/SASLPassword"
+    },
+    "RegistryUrl": {
+      "$ref": "#/definitions/RegistryUrl"
+    },
+    "RegistryUsername": {
+      "$ref": "#/definitions/RegistryUsername"
+    },
+    "RegistryPassword": {
+      "$ref": "#/definitions/RegistryPassword"
+    },
+    "CompatibilityMode": {
+      "$ref": "ews-kafka-schema.json#/definitions/CompatibilityMode"
+    }
+  },
+  "definitions": {
+    "BootstrapServers": {
+      "type": "string",
+      "description": "Endpoint URL of the Kafka cluster in the format hostname:port"
+    },
+    "SecurityProtocol": {
+      "type": "string",
+      "default": "PLAINTEXT",
+      "description": "Kafka Security Protocol.",
+      "enum": [
+        "PLAINTEXT",
+        "SSL",
+        "SASL_PLAINTEXT",
+        "SASL_SSL"
+      ]
+    },
+    "SASLMechanism": {
+      "type": "string",
+      "default": "PLAIN",
+      "description": "Kafka SASL mechanism for Authentication",
+      "enum": [
+        "PLAIN",
+        "GSSAPI",
+        "OAUTHBEARER",
+        "SCRAM-SHA-256",
+        "SCRAM-SHA-512"
+      ]
+    },
+    "SASLUsername": {
+      "type": "string",
+      "default": "",
+      "description": "Kafka SASL username for Authentication"
+    },
+    "SASLPassword": {
+      "type": "string",
+      "default": "",
+      "description": "Kafka SASL password for Authentication"
+    },
+    "RegistryUrl": {
+      "type": "string",
+      "description": "Schema registry URL"
+    },
+    "RegistryUsername": {
+      "type": "string",
+      "description": "Schema registry username"
+    },
+    "RegistryPassword": {
+      "type": "string",
+      "description": "Schema registry password"
+    },
+    "RegistryUserInfo": {
+      "type": "string",
+      "description": "The username and password together in the form of username:password"
+    }
+  }
+}
