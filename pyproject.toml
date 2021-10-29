@@ -41,10 +41,10 @@ aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
 
 
 [tool.tbump]
-github_url = "https://github.com/compose-x/ecs_composex"
+github_url = "https://github.com/compose-x/cfn-kafka-admin"
 
 [tool.tbump.version]
-current = "0.17.1"
+current = "0.0.1"
 
 regex = '''
   (?P<major>\d+)
@@ -63,7 +63,7 @@ tag_template = "v{new_version}"
 src = "pyproject.toml"
 
 [[tool.tbump.file]]
-src = "ecs_composex/__init__.py"
+src = "cfn_kafka_admin/__init__.py"
 
 [[tool.tbump.before_commit]]
 name = "Files format"
