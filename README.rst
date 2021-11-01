@@ -13,6 +13,9 @@ CLI Tool and Lambda Functions to CRUD Kafka resources via AWS CloudFormation
 
 |CODE_STYLE| |TDD|
 
+.. image:: https://codebuild.eu-west-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiY2xwc0NER1JuU1J3MThYczhFMDJLWlQxWGpoRnhNWHNtbGN1NGpVMVNTMk12UlQxdWVlZ2w5YnhPQzhkMnV4cTI0S0tIdTRyTmRHWWErWXJPNWFpcWlzPSIsIml2UGFyYW1ldGVyU3BlYyI6IkxaRGZCMW1KbVE1RWRJYjciLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=main
+        :target: https://eu-west-1.codebuild.aws.amazon.com/project/eyJlbmNyeXB0ZWREYXRhIjoibVAvWVBBNjZlNWFwTWEwSEdWcGx6MWpudy9KeEZTb1lXdWFuQ3FwbjJCRTBnc1lyZm41eHRqV2k0bDN6UTBmaEpJMGd0Y3I3Vm5kTGtZQzc1b25Uckxxd3hERzlpSzJndVFOekJUR0NMM0V0YXljSWx4Yjc2YmJpUzlZM01RPT0iLCJpdlBhcmFtZXRlclNwZWMiOiI3bnllb1dlbU8rZis1ekh5IiwibWF0ZXJpYWxTZXRTZXJpYWwiOjF9
+
 
 Manage Kafka resources via AWS CFN
 ===================================
