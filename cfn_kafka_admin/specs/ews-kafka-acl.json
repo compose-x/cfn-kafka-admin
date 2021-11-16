@@ -26,15 +26,13 @@
       "properties": {
         "Resource": {
           "type": "string",
-          "pattern": "^[a-zA-Z0-9_.-]+$",
           "description": "Name of the resource to apply the ACL for",
           "$comment": "LITERAL or PREFIX value for the resource"
         },
         "PatternType": {
           "type": "string",
           "pattern": "^[A-Z]+$",
-          "description": "Pattern type",
-          "$comment": "LITERAL or PREFIXED",
+          "description": "Pattern type for resource value",
           "enum": [
             "LITERAL",
             "PREFIXED",
