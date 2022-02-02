@@ -73,6 +73,15 @@
         },
         "CompatibilityMode": {
           "$ref": "ews-kafka-schema.json#/definitions/CompatibilityMode"
+        },
+        "DeletionPolicy": {
+          "type": "string",
+          "enum": [
+            "Retain",
+            "Delete"
+          ],
+          "default": "Retain",
+          "description": "When set, overrides the DeletionPolicy set as default for all schemas"
         }
       }
     }

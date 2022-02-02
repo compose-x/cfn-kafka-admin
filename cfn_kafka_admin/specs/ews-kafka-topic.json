@@ -54,6 +54,15 @@
       "default": 3,
       "description": "Kafka topic replication factor"
     },
+    "DeletionPolicy": {
+      "type": "string",
+      "enum": [
+        "Retain",
+        "Delete"
+      ],
+      "default": "Retain",
+      "description": "When set, overrides the DeletionPolicy set on the Topic of the schema. For safety, defaulting to Retain"
+    },
     "TopicSchemas": {
       "type": "object",
       "properties": {
@@ -65,6 +74,15 @@
         },
         "Header": {
           "$ref": "ews-kafka-schema.json#/definitions/TopicSchemaDef"
+        },
+        "DeletionPolicy": {
+          "type": "string",
+          "enum": [
+            "Retain",
+            "Delete"
+          ],
+          "default": "Retain",
+          "description": "When set, overrides the DeletionPolicy set on the Topic of the schema. For safety, defaulting to Retain"
         }
       }
     }

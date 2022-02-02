@@ -205,6 +205,7 @@ class KafkaStack(object):
         schema_class,
         attribute,
         subject_suffix,
+        deletion_policy,
     ):
         if isinstance(attribute.Definition, str):
             try:
@@ -217,6 +218,7 @@ class KafkaStack(object):
             definition = attribute.Definition
         topic_schema_r = schema_class(
             f"{topic_name}{SerializerDef[attribute.Serializer.name].value}{subject_suffix}Schema",
+            DeletionPolicy=deletion_policy,
             SerializeAttribute=subject_suffix,
             Serializer=SerializerDef[attribute.Serializer.name].value,
             Definition=definition,
@@ -286,6 +288,25 @@ class KafkaStack(object):
         else:
             registry_userinfo = Ref(AWS_NO_VALUE)
 
+        if keyisset("DeletionPolicy", schema_config):
+            deletion_policy = DeletionPolicy[schema_config["DeletionPolicy"].name].value
+            if (
+                self.model.Schemas
+                and self.model.Schemas.DeletionPolicy
+                and DeletionPolicy[self.model.Schemas.DeletionPolicy.name].value
+                != deletion_policy
+            ):
+                print(
+                    f"WARNING !_! Schema for topic {topic_name} overrides global "
+                    f"{DeletionPolicy[self.model.Schemas.DeletionPolicy.name].value} policy with {deletion_policy}"
+                )
+        elif self.model.Schemas and self.model.Schemas.DeletionPolicy:
+            deletion_policy = DeletionPolicy[
+                self.model.Schemas.DeletionPolicy.name
+            ].value
+        else:
+            deletion_policy = "Retain"
+
         if registry_userinfo and not isinstance(registry_userinfo, Ref):
             registry_username = Ref(AWS_NO_VALUE)
             registry_password = Ref(AWS_NO_VALUE)
@@ -300,6 +321,7 @@ class KafkaStack(object):
                 schema_class,
                 schema_definition.Key,
                 "key",
+                deletion_policy,
             )
         if schema_definition.Value:
             self.add_attribute_schema(
@@ -311,6 +333,7 @@ class KafkaStack(object):
                 schema_class,
                 schema_definition.Value,
                 "value",
+                deletion_policy,
             )
 
     def render_topics(self):
@@ -346,6 +369,7 @@ class KafkaStack(object):
             topic_title_raw = topic.Name.__root__
             topic_title = topic_title_raw.replace("-", "").title()
             topic_title = NONALPHANUM.sub("", topic_title)
+
             if topic.Schema and keyisset("Schema", topic_cfg):
                 self.add_topic_schema(topic_title, topic.Schema)
                 del topic_cfg["Schema"]
