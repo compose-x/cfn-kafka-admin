@@ -45,7 +45,6 @@ def delete_topic(name, cluster_info):
     :param cluster_info: cluster information
     :return:
     """
-    print(f"Deleting topic {name}")
     admin_client = KafkaAdminClient(**cluster_info)
     admin_client.delete_topics([name])
 

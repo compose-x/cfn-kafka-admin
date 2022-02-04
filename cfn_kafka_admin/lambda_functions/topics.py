@@ -149,6 +149,10 @@ class KafkaTopic(ResourceProvider):
         try:
             self.define_cluster_info()
             delete_topic(self.get("Name"), self.cluster_info)
+        except errors.UnknownTopicOrPartitionError:
+            self.success(
+                f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."
+            )
         except Exception as error:
             self.fail(
                 f"Failed to delete topic {self.get_attribute('Name')}. {str(error)}"
@@ -156,6 +160,12 @@ class KafkaTopic(ResourceProvider):
 
 
 def lambda_handler(event, context):
+    """
+    AWS Lambda Function handler for topics management
+
+    :param dict event:
+    :param dict context:
+    """
     provider = KafkaTopic()
     provider.handle(event, context)
 
