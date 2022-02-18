@@ -86,23 +86,23 @@ conform	: ## Conform to a standard of coding syntax
 python39	: clean
 			test -d layer && rm -rf layer || mkdir layer
 			docker run -u $(shell bash -c 'id -u'):$(shell bash -c 'id -u') \
-			--rm -v $(PWD):/opt --entrypoint /bin/bash \
+			--rm -v $(PWD):/app --entrypoint /bin/bash \
 			public.ecr.aws/compose-x/python:3.9 \
-			-c "ls -lA dist; pip install --no-cache-dir /opt/dist/*.whl -t /opt/layer"
+			-c "pip install --no-cache-dir /app/dist/*.whl -t /app/layer"
 
 python38	: clean
 			test -d layer && rm -rf layer || mkdir layer
 			docker run -u $(shell bash -c 'id -u'):$(shell bash -c 'id -u') \
-			--rm -v $(PWD):/opt --entrypoint /bin/bash \
+			--rm -v $(PWD):/app --entrypoint /bin/bash \
 			public.ecr.aws/compose-x/python:3.8 \
-			-c "ls -lA dist; pip install --no-cache-dir /opt/dist/*.whl -t /opt/layer"
+			-c "pip install --no-cache-dir /app/dist/*.whl -t /app/layer"
 
 python37	: clean
 			test -d layer && rm -rf layer || mkdir layer
 			docker run -u $(shell bash -c 'id -u'):$(shell bash -c 'id -u') \
-			--rm -v $(PWD):/opt --entrypoint /bin/bash \
+			--rm -v $(PWD):/app --entrypoint /bin/bash \
 			public.ecr.aws/compose-x/python:3.7 \
-			-c "ls dist ; pip install --no-cache-dir /opt/dist/*.whl -t /opt/layer"
+			-c "pip install --no-cache-dir /app/dist/*.whl -t /app/layer"
 
 
 dist:		clean ## builds source and wheel package

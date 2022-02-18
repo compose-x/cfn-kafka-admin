@@ -15,13 +15,13 @@ readme = "README.rst"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-compose-x-common = {extras = ["aws"], version = "^0.2.3"}
+compose-x-common = "^0.4.2"
 jsonschema = "^4.4.0"
 importlib-resources = "^5.4.0"
 PyYAML = "^6.0"
 troposphere = "^3.2.2"
 kafka-schema-registry-admin = "^0.1.0"
-datamodel-code-generator = {extras = ["http"], version = "^0.11.17"}
+datamodel-code-generator = {extras = ["http"], version = "^0.11.19"}
 aws-cfn-custom-resource-resolve-parser = "^0.2.1"
 kafka-python = "^2.0.2"
 cfn-resource-provider = "^1.0.7"

@@ -8,7 +8,10 @@
 import json
 import re
 from copy import deepcopy
+from datetime import datetime as dt
+from uuid import uuid4
 
+import boto3
 import yaml
 from compose_x_common.compose_x_common import keyisset, keypresent
 
@@ -20,6 +23,9 @@ except ImportError:
 from troposphere import AWS_NO_VALUE, GetAtt, Ref, Sub, Template
 
 from cfn_kafka_admin.models.admin import *
+
+DATE = dt.utcnow().isoformat()
+FILE_PREFIX = f'{dt.utcnow().strftime("%Y/%m/%d/%H%M")}/{str(uuid4().hex)[:6]}/'
 
 from .cfn_resources_definitions import KafkaAclPolicy
 from .cfn_resources_definitions.custom import KafkaAcl as CACLs
@@ -195,27 +201,53 @@ class KafkaStack(object):
             }
         )
 
-    def add_attribute_schema(
-        self,
-        topic_name,
-        registry_url,
-        registry_username,
-        registry_password,
-        registry_userinfo,
-        schema_class,
-        attribute,
-        subject_suffix,
-        deletion_policy,
+    def define_schema_definition_path(
+        self, topic_name: str, subject_suffix: str, attribute: TopicSchemaDef
     ):
+        file_name = None
         if isinstance(attribute.Definition, str):
             try:
                 with open(attribute.Definition, "r") as definition_fd:
+                    file_name = attribute.Definition
                     definition = json.dumps(json.loads(definition_fd.read()))
             except FileNotFoundError:
                 print("Failed to load file, using string literal as definition")
                 definition = attribute.Definition
         else:
             definition = attribute.Definition
+            file_name = f"{topic_name}{SerializerDef[attribute.Serializer.name].value}{subject_suffix}Schema.json"
+
+        if self.model.Schemas.S3Store and file_name:
+            s3_file_path = (
+                f"{self.model.Schemas.S3Store.PrefixPath}{FILE_PREFIX}{file_name}"
+            )
+            session = boto3.session.Session()
+            resource = session.resource("s3")
+            bucket = resource.Bucket(self.model.Schemas.S3Store.BucketName)
+            s3_file = bucket.Object(key=s3_file_path)
+            s3_file.put(Body=definition, ContentType="application/json")
+            s3_uri = f"s3://{s3_file.bucket_name}/{s3_file.key}"
+            print(f"Uploaded schema {file_name} to {s3_uri}")
+            return s3_uri
+        else:
+            return definition
+
+    def add_attribute_schema(
+        self,
+        topic_name: str,
+        registry_url,
+        registry_username,
+        registry_password,
+        registry_userinfo,
+        schema_class,
+        attribute: TopicSchemaDef,
+        subject_suffix: str,
+        deletion_policy,
+    ):
+
+        definition = self.define_schema_definition_path(
+            topic_name, subject_suffix, attribute
+        )
         topic_schema_r = schema_class(
             f"{topic_name}{SerializerDef[attribute.Serializer.name].value}{subject_suffix}Schema",
             DeletionPolicy=deletion_policy,

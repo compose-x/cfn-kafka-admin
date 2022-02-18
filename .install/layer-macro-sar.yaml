@@ -269,7 +269,7 @@ Resources:
     Properties:
       CompatibleRuntimes:
         - python3.8
-      ContentUri: s3://eu-west-1.files.compose-x.io/${LAYER_FILE}
+      ContentUri: ${S3_LAYER_UPLOAD_PATH}
       Description: Kafka resources library for AWS CFN
       LayerName: cfn_kafka_admin
       LicenseInfo: MPL-2.0
