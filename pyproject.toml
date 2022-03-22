@@ -10,18 +10,19 @@ classifiers = [
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
 ]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-compose-x-common = "^0.4.2"
+compose-x-common = "^0.4.3"
 jsonschema = "^4.4.0"
 importlib-resources = "^5.4.0"
 PyYAML = "^6.0"
-troposphere = "^3.2.2"
+troposphere = "^4.0.0b1"
 kafka-schema-registry-admin = "^0.1.0"
-datamodel-code-generator = {extras = ["http"], version = "^0.11.19"}
+datamodel-code-generator = {extras = ["http"], version = "^0.11.20"}
 aws-cfn-custom-resource-resolve-parser = "^0.2.1"
 kafka-python = "^2.0.2"
 cfn-resource-provider = "^1.0.7"
