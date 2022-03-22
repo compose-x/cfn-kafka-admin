@@ -44,11 +44,12 @@ phases:
       - zip -q -r9 layer-${SUFFIX}.zip python
       - LAYER_FILE="layers/cfn_kafka_admin/layer-${SUFFIX}.zip"
       - cp layer-${SUFFIX}.zip layer.zip
+      - S3_LAYER_UPLOAD_PATH=s3://${PUBLIC_FILES_BUCKET}/${LAYER_FILE}
 
       - |
-          aws --region eu-west-1 s3 cp layer-${SUFFIX}.zip s3://${PUBLIC_FILES_BUCKET}/${LAYER_FILE} \
+          aws --region eu-west-1 s3 cp layer-${SUFFIX}.zip $S3_LAYER_UPLOAD_PATH \
             --sse AES256 --acl public-read --storage-class STANDARD_IA --no-progress
-      - envsubst '$LAYER_FILE' < .install/layer-macro-sar.yaml > cfn-kafka-admin-sar.yaml
+      - envsubst '$S3_LAYER_UPLOAD_PATH' < .install/layer-macro-sar.yaml > cfn-kafka-admin-sar.yaml
       - |
           aws s3 cp cfn-kafka-admin-sar.yaml s3://${PUBLIC_FILES_BUCKET}/aws-sar/cfn-kafka-admin.yaml \
             --sse AES256 --acl public-read --storage-class STANDARD_IA

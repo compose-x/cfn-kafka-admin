@@ -82,6 +82,22 @@
           ],
           "default": "Retain",
           "description": "When set, overrides the DeletionPolicy set as default for all schemas"
+        },
+        "S3Store": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["BucketName"],
+          "properties": {
+            "BucketName": {
+              "type": "string",
+              "format": "hostname"
+            },
+            "PrefixPath": {
+              "type": "string",
+              "default": "",
+              "pattern": "^[^/](.*)\/$"
+            }
+          }
         }
       }
     }
