@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cfn_kafka_admin"
-version = "0.3.1"
+version = "0.4.0b0"
 description = "AWS CloudFormation Resources to manage Kafka"
 authors = ["johnpreston <john@compose-x.io>"]
 license = "MPL-2.0"
@@ -35,7 +35,7 @@ coverage = "^5.5"
 pytest = "^6.2.5"
 pre-commit = "^2.17.0"
 tbump = "^6.7.0"
-cleanpy = "^0.3.1"
+cleanpy = "^0.4.0b0"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
@@ -45,7 +45,7 @@ aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
 github_url = "https://github.com/compose-x/cfn-kafka-admin"
 
 [tool.tbump.version]
-current = "0.3.1"
+current = "0.4.0b0"
 
 regex = '''
   (?P<major>\d+)
