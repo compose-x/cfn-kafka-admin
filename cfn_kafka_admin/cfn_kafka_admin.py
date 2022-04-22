@@ -13,7 +13,7 @@ from uuid import uuid4
 
 import boto3
 import yaml
-from compose_x_common.compose_x_common import keyisset, keypresent
+from compose_x_common.compose_x_common import keyisset, keypresent, set_else_none
 
 try:
     from yaml import CLoader as Loader
@@ -40,7 +40,7 @@ NONALPHANUM = re.compile(r"([^a-zA-Z0-9]+)")
 
 def merge_topics(final, override, extend_config_only=False):
     """
-    Function to override and update settings from override to primary
+    Function to override and update new_settings from override to primary
     Topics are filtered out via the Name property
     :param dict final:
     :param dict override:
@@ -49,7 +49,9 @@ def merge_topics(final, override, extend_config_only=False):
     :rtype: dict
     """
     if keyisset("Topics", override):
-        override_top_topics = Topics.parse_obj(override["Topics"]).dict()
+        override_top_topics = Topics.parse_obj(override["Topics"]).dict(
+            by_alias=True,
+        )
         if extend_config_only:
             # Allows to add the config and ensure that we do not import topics from config
             if keypresent("Topics", override_top_topics):
@@ -75,7 +77,7 @@ def merge_topics(final, override, extend_config_only=False):
 
 def merge_acls(final, override, extend_all=False):
     """
-    Function to override and update settings from override to primary
+    Function to override and update new_settings from override to primary
     All ACL policy is a dictionary made of simple objects, no key filtering
 
     :param dict final:
@@ -85,7 +87,7 @@ def merge_acls(final, override, extend_all=False):
     :rtype: dict
     """
     if keyisset("ACLs", override):
-        override_acls = ACLs.parse_obj(override["ACLs"]).dict()
+        override_acls = ACLs.parse_obj(override["ACLs"]).dict(by_alias=True)
         if keypresent("Policies", override_acls) and not extend_all:
             del override_acls["Policies"]
             final["ACLs"].update(override_acls)
@@ -101,7 +103,7 @@ def merge_acls(final, override, extend_all=False):
 
 def merge_contents(primary, override, extend_all=False):
     """
-    Function to override and update settings from override to primary
+    Function to override and update new_settings from override to primary
     :param primary:
     :param override:
     :param extend_all: Whether the policies or ACLs can be merged.
@@ -119,7 +121,7 @@ def merge_contents(primary, override, extend_all=False):
         and isinstance(override["Globals"], dict)
     ):
         override_globals = EwsKafkaParameters.parse_obj(override["Globals"])
-        final["Globals"].update(override_globals.dict())
+        final["Globals"].update(override_globals.dict(by_alias=True))
 
     if (
         keypresent("Schemas", final)
@@ -127,14 +129,14 @@ def merge_contents(primary, override, extend_all=False):
         and isinstance(override["Schemas"], dict)
     ):
         override_globals = Schemas.parse_obj(override["Schemas"])
-        final["Schemas"].update(override_globals.dict())
+        final["Schemas"].update(override_globals.dict(by_alias=True))
     elif (
         not keypresent("Schemas", final)
         and keyisset("Schemas", override)
         and isinstance(override["Schemas"], dict)
     ):
         override_globals = Schemas.parse_obj(override["Schemas"])
-        final["Schemas"] = override_globals.dict()
+        final["Schemas"] = override_globals.dict(by_alias=True)
 
     merge_acls(final, override, extend_all)
     merge_topics(final, override, not extend_all)
@@ -169,6 +171,23 @@ class KafkaStack(object):
                 override_content = override_fd.read()
             override_content = yaml.load(override_content, Loader=Loader)
             final_content = merge_contents(final_content, override_content)
+            print("FINAL", type(final_content), final_content.keys())
+            for topic in final_content["Topics"]["Topics"]:
+                if keyisset("Settings", topic):
+                    settingss = TopicsSettings().parse_obj(topic["Settings"])
+                    print("SETTINGS DEFINED?", settingss, settingss.dict(by_alias=True))
+                    topic["Settings"] = (
+                        TopicsSettings()
+                        .parse_obj(topic["Settings"])
+                        .dict(
+                            by_alias=True,
+                            exclude_none=True,
+                            exclude_unset=True,
+                            exclude_defaults=True,
+                        )
+                    )
+                    print("TOPIC", topic["Name"], "NEW SETTINGS", topic["Settings"])
+
         self.model = Model.parse_obj(final_content)
 
         if not self.model.Topics and not self.model.ACLs:
@@ -177,7 +196,7 @@ class KafkaStack(object):
 
     def set_globals(self):
         """
-        Method to set the global settings
+        Method to set the global new_settings
         """
         self.globals_config.update(
             {
@@ -296,7 +315,7 @@ class KafkaStack(object):
             registry_url = schema_config["RegistryUrl"]
         else:
             raise KeyError(
-                "RegistryUrl is not defined in Schema settings nor in Schemas"
+                "RegistryUrl is not defined in Schema new_settings nor in Schemas"
             )
 
         if self.model.Schemas and self.model.Schemas.RegistryUsername:
@@ -394,10 +413,19 @@ class KafkaStack(object):
                     else topic.ReplicationFactor,
                 }
             )
-            if not keyisset("Settings", topic_cfg) and keypresent(
+            if keypresent("Settings", topic_cfg) and not keyisset(
                 "Settings", topic_cfg
             ):
                 del topic_cfg["Settings"]
+            else:
+                topic_cfg["Settings"] = json.loads(
+                    topic.Settings.json(
+                        by_alias=True,
+                        exclude_none=True,
+                        exclude_unset=True,
+                        exclude_defaults=True,
+                    )
+                )
             topic_title_raw = topic.Name.__root__
             topic_title = topic_title_raw.replace("-", "").title()
             topic_title = NONALPHANUM.sub("", topic_title)

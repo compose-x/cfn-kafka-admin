@@ -90,6 +90,7 @@ class KafkaTopic(ResourceProvider):
         if not self.get("PartitionsCount") >= 1:
             self.fail("The number of partitions must be a strictly positive value >= 1")
         try:
+            LOG.info(f'{self.get("Name")} - {self.get("Settings")}')
             topic_name = create_new_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
@@ -129,6 +130,7 @@ class KafkaTopic(ResourceProvider):
                 self.get("Name"),
                 self.get("PartitionsCount"),
                 self.cluster_info,
+                settings=self.get("Settings"),
             )
         except Exception as error:
             self.fail(str(error))

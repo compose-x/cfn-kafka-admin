@@ -34,6 +34,9 @@
     },
     "Schema": {
       "$ref": "#/definitions/TopicSchemas"
+    },
+    "Settings": {
+      "$ref": "#/definitions/TopicsSettings"
     }
   },
   "definitions": {
@@ -83,6 +86,114 @@
           ],
           "default": "Retain",
           "description": "When set, overrides the DeletionPolicy set on the Topic of the schema. For safety, defaulting to Retain"
+        }
+      }
+    },
+    "TopicsSettings": {
+      "$id": "#/definitions/TopicsSettings",
+      "type": "object",
+      "properties": {
+        "cleanup.policy": {
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_cleanup.policy",
+          "type": "array",
+          "default": [
+            "delete"
+          ],
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "string",
+            "enum": [
+              "compact",
+              "delete"
+            ]
+          }
+        },
+        "compression.type": {
+          "type": "string",
+          "enum": [
+            "uncompressed",
+            "zstd",
+            "lz4",
+            "snappy",
+            "gzip",
+            "producer"
+          ],
+          "default": "producer",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_compression.type"
+        },
+        "delete.retention.ms": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 86400000,
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_delete.retention.ms"
+        },
+        "file.delete.delay.ms": {
+          "type": "number",
+          "minimum": 0,
+          "default": 60000,
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_file.delete.delay.ms"
+        },
+        "retention.ms": {
+          "type": "number",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_retention.ms",
+          "default": 604800000,
+          "minimum": -1
+        },
+        "flush.messages": {
+          "type": "number",
+          "default": 9223372036854775807,
+          "minimum": 0,
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_flush.messages"
+        },
+        "flush.ms": {
+          "type": "number",
+          "minimum": 0,
+          "default": 9223372036854775807,
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_flush.ms"
+        },
+        "index.interval.bytes": {
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_index.interval.bytes",
+          "type": "number",
+          "minimum": 0,
+          "default": 4096
+        },
+        "max.compaction.lag.ms": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 9223372036854775807,
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_max.compaction.lag.ms"
+        },
+        "min.compaction.lag.ms": {
+          "type": "number",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_min.compaction.lag.ms",
+          "minimum": 0
+        },
+        "min.cleanable.dirty.ratio": {
+          "type": "number",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_min.cleanable.dirty.ratio",
+          "default": 0.5,
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "max.message.bytes": {
+          "type": "number",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_max.message.bytes",
+          "minimum": 0,
+          "default": 1048588
+        },
+        "confluent.key.schema.validation": {
+          "type": "boolean",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_confluent.key.schema.validation"
+        },
+        "confluent.key.subject.name.strategy": {
+          "type": "string",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_confluent.key.subject.name.strategy"
+        },
+        "confluent.tier.enable": {
+          "type": "string",
+          "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_confluent.tier.enable"
         }
       }
     }
