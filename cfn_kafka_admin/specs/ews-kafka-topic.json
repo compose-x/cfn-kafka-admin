@@ -95,20 +95,16 @@
       "properties": {
         "cleanup.policy": {
           "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_cleanup.policy",
-          "type": "array",
-          "default": [
-            "delete"
-          ],
+          "type": "string",
+          "default": "delete",
           "uniqueItems": true,
           "minItems": 1,
           "maxItems": 2,
-          "items": {
-            "type": "string",
-            "enum": [
-              "compact",
-              "delete"
-            ]
-          }
+          "enum": [
+            "compact",
+            "delete",
+            "compact,delete"
+          ]
         },
         "compression.type": {
           "type": "string",
