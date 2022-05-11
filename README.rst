@@ -25,9 +25,6 @@ Manage Kafka resources via AWS CFN
 * Schemas (non AWS Glue Schema)
 
 
-* Free software: MPL-2.0
-* Documentation: https://cfn-kafka-admin.readthedocs.io.
-
 .. |PYPI_VERSION| image:: https://img.shields.io/pypi/v/cfn-kafka-admin.svg
         :target: https://pypi.python.org/pypi/cfn-kafka-admin
 

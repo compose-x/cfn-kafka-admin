@@ -1,9 +1,15 @@
+
+.. meta::
+    :description: CFN Kafka Admin
+    :keywords: AWS, CloudFormation, Kafka, Topics, ACL, Schema
+
 .. highlight:: shell
+
+.. _installation_reference:
 
 ============
 Installation
 ============
-
 
 Stable release
 --------------
@@ -12,7 +18,7 @@ To install cfn-kafka-admin, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install cfn_kafka_admin
+    $ pip install cfn-kafka-admin
 
 This is the preferred method to install cfn-kafka-admin, as it will always install the most recent stable release.
 
