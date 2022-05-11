@@ -299,7 +299,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.11.20"
+version = "0.12.0"
 description = "Datamodel Code Generator"
 category = "main"
 optional = false
@@ -1349,7 +1349,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "6860fff50443dbfca1502fadd4ec8a8f541899d3530b2d74c2d14063a426d318"
+content-hash = "8f45ba9daa1083e0eb3cf574d8cac77fef6665cf4195c857cb01578902f75f29"
 
 [metadata.files]
 alabaster = [
@@ -1524,8 +1524,8 @@ css-html-js-minify = [
     {file = "css_html_js_minify-2.5.5-py3.6.egg", hash = "sha256:4704e04a0cd6dd56d61bbfa3bfffc630da6b2284be33519be0b456672e2a2438"},
 ]
 datamodel-code-generator = [
-    {file = "datamodel-code-generator-0.11.20.tar.gz", hash = "sha256:aac5a5afa9a3170dbdca0fbdd3cdb5bf372d60f506c624af0699fb8d8c06c8cc"},
-    {file = "datamodel_code_generator-0.11.20-py3-none-any.whl", hash = "sha256:ee2e29cd8be3e15deb6d588f6d1b5bff785a765c72b9d2755bd8ea7affb862b7"},
+    {file = "datamodel-code-generator-0.12.0.tar.gz", hash = "sha256:77ce44c2a8a6d6a177fcaf97ebe5c488dfcc40d206fef464825bb74a033e4b25"},
+    {file = "datamodel_code_generator-0.12.0-py3-none-any.whl", hash = "sha256:4f408652cdbc7686e301e2037f4c8fb56c158694a20f653f08b3b707e297f672"},
 ]
 distlib = [
     {file = "distlib-0.3.4-py2.py3-none-any.whl", hash = "sha256:6564fe0a8f51e734df6333d08b8b94d4ea8ee6b99b5ed50613f731fd4089f34b"},
