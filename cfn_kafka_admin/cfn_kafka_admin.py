@@ -1,4 +1,3 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2020-2021 John Mille <john@ews-network.net>
 
@@ -96,7 +95,7 @@ def merge_acls(final, override, extend_all=False):
                 merged_lists = override_acls["Policies"] + final["ACLs"]["Policies"]
             else:
                 merged_lists = override_acls["Policies"]
-            acls = [dict(y) for y in set(tuple(x.items()) for x in merged_lists)]
+            acls = [dict(y) for y in {tuple(x.items()) for x in merged_lists}]
             final["ACLs"].update(override_acls)
             final["ACLs"]["Policies"] = acls
 
@@ -143,7 +142,7 @@ def merge_contents(primary, override, extend_all=False):
     return final
 
 
-class KafkaStack(object):
+class KafkaStack:
     """
     Class to represent the Kafka topics / acls / schemas in CloudFormation.
     """
@@ -160,22 +159,24 @@ class KafkaStack(object):
         final_content = {"Globals": {}, "Topics": {}, "ACLs": {}}
         for file_path in files_paths:
             if file_path.endswith(".yaml") or file_path.endswith(".yml"):
-                with open(file_path, "r") as file_fd:
+                with open(file_path) as file_fd:
                     file_content = file_fd.read()
                 yaml_content = yaml.load(file_content, Loader=Loader)
                 final_content = merge_contents(
                     final_content, yaml_content, extend_all=True
                 )
         if config_file_path:
-            with open(config_file_path, "r") as override_fd:
+            with open(config_file_path) as override_fd:
                 override_content = override_fd.read()
             override_content = yaml.load(override_content, Loader=Loader)
             final_content = merge_contents(final_content, override_content)
-            print("FINAL", type(final_content), final_content.keys())
+            if not keyisset("Topics", final_content) or not keyisset(
+                "Topics", final_content["Topics"]
+            ):
+                return
             for topic in final_content["Topics"]["Topics"]:
                 if keyisset("Settings", topic):
                     settingss = TopicsSettings().parse_obj(topic["Settings"])
-                    print("SETTINGS DEFINED?", settingss, settingss.dict(by_alias=True))
                     topic["Settings"] = (
                         TopicsSettings()
                         .parse_obj(topic["Settings"])
@@ -186,7 +187,6 @@ class KafkaStack(object):
                             exclude_defaults=True,
                         )
                     )
-                    print("TOPIC", topic["Name"], "NEW SETTINGS", topic["Settings"])
 
         self.model = Model.parse_obj(final_content)
 
@@ -226,7 +226,7 @@ class KafkaStack(object):
         file_name = None
         if isinstance(attribute.Definition, str):
             try:
-                with open(attribute.Definition, "r") as definition_fd:
+                with open(attribute.Definition) as definition_fd:
                     file_name = attribute.Definition
                     definition = json.dumps(json.loads(definition_fd.read()))
             except FileNotFoundError:
