@@ -170,13 +170,11 @@ class KafkaStack:
                 override_content = override_fd.read()
             override_content = yaml.load(override_content, Loader=Loader)
             final_content = merge_contents(final_content, override_content)
-            if not keyisset("Topics", final_content) or not keyisset(
-                "Topics", final_content["Topics"]
-            ):
-                return
+        if keyisset("Topics", final_content) and keyisset(
+            "Topics", final_content["Topics"]
+        ):
             for topic in final_content["Topics"]["Topics"]:
                 if keyisset("Settings", topic):
-                    settingss = TopicsSettings().parse_obj(topic["Settings"])
                     topic["Settings"] = (
                         TopicsSettings()
                         .parse_obj(topic["Settings"])
@@ -189,7 +187,6 @@ class KafkaStack:
                     )
 
         self.model = Model.parse_obj(final_content)
-
         if not self.model.Topics and not self.model.ACLs:
             raise KeyError("You must define at least one of ACLs or Topics")
         self.set_globals()
@@ -388,7 +385,7 @@ class KafkaStack:
             )
 
     def render_topics(self):
-        if not self.model.Topics or not self.model.Topics.Topics:
+        if not self.model or not self.model.Topics or not self.model.Topics.Topics:
             return
         function_name = None
         if self.model.Topics.FunctionName:
