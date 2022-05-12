@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import boto3
 import yaml
-from compose_x_common.compose_x_common import keyisset, keypresent, set_else_none
+from compose_x_common.compose_x_common import keyisset, keypresent
 
 try:
     from yaml import CLoader as Loader
@@ -21,10 +21,30 @@ except ImportError:
 
 from troposphere import AWS_NO_VALUE, GetAtt, Ref, Sub, Template
 
-from cfn_kafka_admin.models.admin import *
+try:
+    from cfn_kafka_admin.models.admin import *
+except ImportError:
+    from pathlib import Path
+    from tempfile import TemporaryDirectory
 
-DATE = dt.utcnow().isoformat()
-FILE_PREFIX = f'{dt.utcnow().strftime("%Y/%m/%d/%H%M")}/{str(uuid4().hex)[:6]}/'
+    from datamodel_code_generator import InputFileType, generate
+
+    with open("specs/aws-cfn-kafka-admin-provider-schema.json") as admin_fd:
+        json_schema: str = admin_fd.read()
+
+    with TemporaryDirectory() as temporary_directory_name:
+        temporary_directory = Path(temporary_directory_name)
+        output = Path(temporary_directory / "model.py")
+        generate(
+            json_schema,
+            input_file_type=InputFileType.JsonSchema,
+            input_filename="example.json",
+            output=output,
+        )
+        model: str = output.read_text()
+        with open("models/admin.py", "w") as tmp_admin_fd:
+            tmp_admin_fd.write(model)
+    from cfn_kafka_admin.models.admin import *
 
 from .cfn_resources_definitions import KafkaAclPolicy
 from .cfn_resources_definitions.custom import KafkaAcl as CACLs
@@ -35,6 +55,8 @@ from .cfn_resources_definitions.resource import KafkaTopic as RTopic
 from .cfn_resources_definitions.resource import KafkaTopicSchema as RTopicSchema
 
 NONALPHANUM = re.compile(r"([^a-zA-Z0-9]+)")
+DATE = dt.utcnow().isoformat()
+FILE_PREFIX = f'{dt.utcnow().strftime("%Y/%m/%d/%H%M")}/{str(uuid4().hex)[:6]}/'
 
 
 def merge_topics(final, override, extend_config_only=False):

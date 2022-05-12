@@ -112,10 +112,7 @@ package:	dist $(PYTHON_VERSION)
 			cleanpy -af --include-testing layer/
 
 data-model:
-		datamodel-codegen --input cfn_kafka_admin/specs/aws-cfn-kafka-admin-provider-schema.json \
-		--input-file-type jsonschema \
-		--output cfn_kafka_admin/models/admin.py --reuse-model
-#		--enum-field-as-literal all
+			datamodel-codegen
 
 
 release: dist ## package and upload a release

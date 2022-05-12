@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cfn_kafka_admin"
-version = "0.4.2"
+version = "0.4.3"
 description = "AWS CloudFormation Resources to manage Kafka"
 authors = ["johnpreston <john@compose-x.io>"]
 license = "MPL-2.0"
@@ -15,7 +15,7 @@ classifiers = [
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 compose-x-common = "^0.5.0"
 jsonschema = "^4.5.1"
 importlib-resources = "^5.7.1"
@@ -39,16 +39,23 @@ cleanpy = "^0.3.1"
 Sphinx = "^4.5.0"
 sphinx-material = "^0.0.35"
 sphinx-jsonschema = "^1.19.1"
+pyupgrade = "^2.32.1"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
 
+[tool.datamodel-codegen]
+input = "cfn_kafka_admin/specs/aws-cfn-kafka-admin-provider-schema.json"
+input-file-type = "jsonschema"
+output = "cfn_kafka_admin/models/admin.py"
+reuse-model = "true"
+target-python-version = "3.7"
 
 [tool.tbump]
 github_url = "https://github.com/compose-x/cfn-kafka-admin"
 
 [tool.tbump.version]
-current = "0.4.2"
+current = "0.4.3"
 
 regex = '''
   (?P<major>\d+)
