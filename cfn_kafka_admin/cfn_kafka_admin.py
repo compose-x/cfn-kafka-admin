@@ -97,7 +97,14 @@ def merge_topics(final, override, extend_config_only=False):
                 final["Topics"]["Topics"] = topics
 
 
-def handle_duplicate_policies_detection(error, override_acls_dict):
+def handle_duplicate_policies_detection(
+    error: ValidationError, override_acls_dict: dict
+) -> None:
+    """
+    If there is a duplicate ACL policy, identifies and reports the list of duplicates.
+    :param ValidationError error:
+    :param dict override_acls_dict:
+    """
     if "value_error.list.unique_items" in [_error["type"] for _error in error.errors()]:
         policies = set_else_none("Policies", override_acls_dict)
         non_unique_items = []
