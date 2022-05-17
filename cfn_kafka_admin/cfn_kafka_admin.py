@@ -12,7 +12,8 @@ from uuid import uuid4
 
 import boto3
 import yaml
-from compose_x_common.compose_x_common import keyisset, keypresent
+from compose_x_common.compose_x_common import keyisset, keypresent, set_else_none
+from pydantic.error_wrappers import ValidationError
 
 try:
     from yaml import CLoader as Loader
@@ -96,6 +97,21 @@ def merge_topics(final, override, extend_config_only=False):
                 final["Topics"]["Topics"] = topics
 
 
+def handle_duplicate_policies_detection(error, override_acls_dict):
+    if "value_error.list.unique_items" in [_error["type"] for _error in error.errors()]:
+        policies = set_else_none("Policies", override_acls_dict)
+        non_unique_items = []
+        unique_items = []
+        for item in policies:
+            if item not in unique_items:
+                unique_items.append(item)
+            elif item in unique_items:
+                non_unique_items.append(item)
+        print(
+            "The following ACLs are not unique", json.dumps(non_unique_items, indent=2)
+        )
+
+
 def merge_acls(final, override, extend_all=False):
     """
     Function to override and update new_settings from override to primary
@@ -108,7 +124,13 @@ def merge_acls(final, override, extend_all=False):
     :rtype: dict
     """
     if keyisset("ACLs", override):
-        override_acls = ACLs.parse_obj(override["ACLs"]).dict(by_alias=True)
+        override_acls_dict = override["ACLs"]
+        try:
+            override_acls = ACLs.parse_obj(override_acls_dict).dict(by_alias=True)
+        except ValidationError as error:
+            handle_duplicate_policies_detection(error, override_acls_dict)
+            raise
+
         if keypresent("Policies", override_acls) and not extend_all:
             del override_acls["Policies"]
             final["ACLs"].update(override_acls)
