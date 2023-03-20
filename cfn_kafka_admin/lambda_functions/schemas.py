@@ -1,4 +1,3 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2021 John Mille<john@ews-network.net>
 
@@ -15,7 +14,7 @@ from kafka_schema_registry_admin.kafka_schema_registry_admin import SchemaRegist
 
 from cfn_kafka_admin.models.admin import EwsKafkaSchema
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger()
 LOG.setLevel(logging.INFO)
 
 
@@ -65,8 +64,11 @@ class KafkaSchema(ResourceProvider):
 
     def __init__(self):
         self.cluster_info = {}
-        super(KafkaSchema, self).__init__()
+        super().__init__()
         self.request_schema = EwsKafkaSchema.schema()
+
+    def convert_property_types(self):
+        self.heuristic_convert_property_types(self.properties)
 
     def try_replace_from_secret(self, param):
         if (
@@ -141,7 +143,6 @@ class KafkaSchema(ResourceProvider):
                 as_bool=True,
             )
             if not compatible:
-                print(schema_def)
                 self.fail(
                     f"Schema for {subject} is not compatible with the latest version"
                 )

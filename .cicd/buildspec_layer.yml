@@ -25,7 +25,8 @@ phases:
       - echo $POETRY_BIN_FILE
       - POETRY_BIN_DIR=$(dirname "${POETRY_BIN_FILE}")
       - PATH=$POETRY_BIN_DIR:$PATH
-      - poetry env use system
+      - poetry env use python
+      - poetry env info
       - poetry install
       - POETRY_ENV=`poetry env info --path`
       - echo $POETRY_ENV

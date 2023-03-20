@@ -1,15 +1,14 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2021 John Mille<john@ews-network.net>
 
 """Main module."""
+import logging
 import uuid
 
 from aws_cfn_custom_resource_resolve_parser import handle
 from cfn_resource_provider import ResourceProvider
-from compose_x_common.compose_x_common import keyisset, keypresent
+from compose_x_common.compose_x_common import keyisset
 
-from cfn_kafka_admin.common import setup_logging
 from cfn_kafka_admin.kafka.acls_management import (
     create_new_acls,
     delete_acls,
@@ -17,7 +16,8 @@ from cfn_kafka_admin.kafka.acls_management import (
 )
 from cfn_kafka_admin.models.admin import EwsKafkaAcl
 
-LOG = setup_logging()
+LOG = logging.getLogger()
+LOG.setLevel(logging.INFO)
 
 
 class KafkaACL(ResourceProvider):
@@ -26,22 +26,11 @@ class KafkaACL(ResourceProvider):
         Init method
         """
         self.cluster_info = {}
-        super(KafkaACL, self).__init__()
+        super().__init__()
         self.request_schema = EwsKafkaAcl.schema()
 
     def convert_property_types(self):
-        int_props = []
-        boolean_props = []
-        for prop in int_props:
-            if keypresent(prop, self.properties) and isinstance(
-                self.properties[prop], str
-            ):
-                self.properties[prop] = int(self.properties[prop])
-        for prop in boolean_props:
-            if keypresent(prop, self.properties) and isinstance(
-                self.properties[prop], str
-            ):
-                self.properties[prop] = self.properties[prop].lower() == "true"
+        self.heuristic_convert_property_types(self.properties)
 
     def define_cluster_info(self):
         """

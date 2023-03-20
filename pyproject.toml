@@ -7,7 +7,6 @@ license = "MPL-2.0"
 classifiers = [
   "Natural Language :: English",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
@@ -16,33 +15,32 @@ readme = "README.rst"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-compose-x-common = "^0.5.0"
+compose-x-common = "^1.2"
 jsonschema = "^4.5.1"
 importlib-resources = "^5.7.1"
 PyYAML = "^6.0"
-troposphere = "^4.0.1"
-kafka-schema-registry-admin = "^0.1.0"
-datamodel-code-generator = {extras = ["http"], version = "^0.12"}
+troposphere = "^4.1"
+kafka-schema-registry-admin = "^0.2.4"
+datamodel-code-generator = {extras = ["http"], version = "^0.13"}
 aws-cfn-custom-resource-resolve-parser = "^0.2.1"
-kafka-python = "^2.0.2"
+kafka-python = "^2.0"
 cfn-resource-provider = "^1.0.7"
-
-[tool.poetry.dev-dependencies]
-black = "^22.3.0"
-isort = "^5.10.1"
-flake8 = "^3.9.2"
-coverage = "^5.5"
-pytest = "^6.2.5"
-pre-commit = "^2.19.0"
-tbump = "^6.8.0"
-cleanpy = "^0.3.1"
-Sphinx = "^4.5.0"
-sphinx-material = "^0.0.35"
-sphinx-jsonschema = "^1.19.1"
-pyupgrade = "^2.32.1"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
+
+[tool.poetry.group.dev.dependencies]
+pyupgrade = "^3.0.0"
+black = "^22.3.0"
+isort = "^5.10.1"
+coverage = "^6.5"
+pytest = "^7.1"
+pre-commit = "^2.19.0"
+tbump = "^6.8.0"
+cleanpy = "^0.3.1"
+Sphinx = "^5.2"
+sphinx-material = "^0.0.35"
+sphinx-jsonschema = "^1.19.1"
 
 [tool.datamodel-codegen]
 input = "cfn_kafka_admin/specs/aws-cfn-kafka-admin-provider-schema.json"

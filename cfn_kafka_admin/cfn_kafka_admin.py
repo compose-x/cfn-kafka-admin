@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2020-2021 John Mille <john@ews-network.net>
+# Copyright 2020-2022 John Mille <john@ews-network.net>
 
 
 """Main module."""
@@ -311,7 +311,6 @@ class KafkaStack:
         subject_suffix: str,
         deletion_policy,
     ):
-
         definition = self.define_schema_definition_path(
             topic_name, subject_suffix, attribute
         )

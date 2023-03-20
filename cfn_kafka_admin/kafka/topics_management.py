@@ -1,4 +1,3 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2021 John Mille<john@ews-network.net>
 
@@ -113,7 +112,7 @@ def kafka_update_rules(topic_configs: tuple, new_settings: dict, name: str):
                 continue
             if not properties[key][0]:
                 raise ValueError(name, "Value for", key, "is immutable")
-            elif properties[key][0] and properties[key][1]:
+            elif properties[key][0] and callable(properties[key][1]):
                 properties[key][1](new_value, set_value, name)
 
 
@@ -134,7 +133,12 @@ def update_kafka_topic(
     configs = admin_client.describe_configs(
         config_resources=[ConfigResource(ConfigResourceType.TOPIC, name)]
     )
-    kafka_update_rules(configs, settings, name)
+    print("Topic", name, "Current settings", configs)
+    try:
+        kafka_update_rules(configs, settings, name)
+    except Exception as error:
+        print("FAILED TO ENFORCE UPDATE RULES", error)
+
     curr_partitions = consumer_client.partitions_for_topic(name)
     if curr_partitions:
         curr_partitions_count = len(curr_partitions)

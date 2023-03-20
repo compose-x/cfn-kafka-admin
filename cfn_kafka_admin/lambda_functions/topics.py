@@ -1,14 +1,13 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2021 John Mille<john@ews-network.net>
 
 """Main module."""
+import json
 import logging
 from os import environ
 
 from aws_cfn_custom_resource_resolve_parser import handle
 from cfn_resource_provider import ResourceProvider
-from compose_x_common.compose_x_common import keypresent
 from kafka import errors
 
 from cfn_kafka_admin.kafka.topics_management import (
@@ -16,10 +15,38 @@ from cfn_kafka_admin.kafka.topics_management import (
     delete_topic,
     update_kafka_topic,
 )
-from cfn_kafka_admin.models.admin import EwsKafkaTopic
+from cfn_kafka_admin.models.admin import EwsKafkaTopic, TopicsSettings
 
-LOG = logging.getLogger(__name__)
+LOG = logging.getLogger()
 LOG.setLevel(logging.INFO)
+
+
+def get_settings(request: ResourceProvider) -> dict:
+    """
+    In case settings are not set in the CFN create/update call, use defaults
+    """
+    topic = EwsKafkaTopic(
+        **request.heuristic_convert_property_types(request.properties)
+    )
+    if topic.Settings:
+        settings = json.loads(
+            topic.Settings.json(
+                by_alias=True,
+                exclude_none=True,
+                exclude_defaults=False,
+                exclude_unset=False,
+            )
+        )
+    else:
+        settings = json.loads(
+            TopicsSettings().json(
+                by_alias=True,
+                exclude_none=True,
+                exclude_defaults=False,
+                exclude_unset=False,
+            )
+        )
+    return settings
 
 
 class KafkaTopic(ResourceProvider):
@@ -28,27 +55,11 @@ class KafkaTopic(ResourceProvider):
         Init method
         """
         self.cluster_info = {}
-        super(KafkaTopic, self).__init__()
+        super().__init__()
         self.request_schema = EwsKafkaTopic.schema()
 
     def convert_property_types(self):
-        int_props = ["PartitionsCount", "ReplicationFactor"]
-        boolean_props = ["IsConfluentKafka"]
-        for prop in int_props:
-            if keypresent(prop, self.properties) and isinstance(
-                self.properties[prop], str
-            ):
-                try:
-                    self.properties[prop] = int(self.properties[prop])
-                except Exception as error:
-                    self.fail(
-                        f"Failed to get cluster information - {prop} - {str(error)}"
-                    )
-        for prop in boolean_props:
-            if keypresent(prop, self.properties) and isinstance(
-                self.properties[prop], str
-            ):
-                self.properties[prop] = self.properties[prop].lower() == "true"
+        self.heuristic_convert_property_types(self.properties)
 
     def define_cluster_info(self):
         """
@@ -78,6 +89,7 @@ class KafkaTopic(ResourceProvider):
         """
         try:
             LOG.info(f"Attempting to create new topic {self.get('Name')}")
+            settings = get_settings(self)
             self.define_cluster_info()
             cluster_url = (
                 self.cluster_info["bootstrap.servers"]
@@ -86,6 +98,7 @@ class KafkaTopic(ResourceProvider):
             )
             LOG.info(f"Cluster is {cluster_url}")
         except Exception as error:
+            LOG.exception(error)
             self.fail(f"Failed to initialize - {str(error)}")
         if not self.get("PartitionsCount") >= 1:
             self.fail("The number of partitions must be a strictly positive value >= 1")
@@ -96,13 +109,14 @@ class KafkaTopic(ResourceProvider):
                 self.get("PartitionsCount"),
                 self.cluster_info,
                 replication_factor=self.get("ReplicationFactor"),
-                settings=self.get("Settings"),
+                settings=settings,
             )
             self.physical_resource_id = topic_name
-            self.set_attribute("Name", self.get("Name"))
+            self.set_attribute("Name", topic_name)
             self.set_attribute("Partitions", self.get("PartitionsCount"))
             self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
             self.success(f"Created new topic {topic_name}")
+            LOG.info(f"Created new topic {topic_name}")
         except errors.TopicAlreadyExistsError as error:
             if environ.get("FAIL_IF_ALREADY_EXISTS", None) is None:
                 LOG.info(f"{self.get('Name')} - Importing existing Topic")
@@ -124,14 +138,19 @@ class KafkaTopic(ResourceProvider):
         """
         :return:
         """
+        settings = get_settings(self)
         try:
             self.define_cluster_info()
             update_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
                 self.cluster_info,
-                settings=self.get("Settings"),
+                settings=settings,
             )
+            self.set_attribute("Name", self.old_properties.get("Name"))
+            self.set_attribute("Partitions", self.get("PartitionsCount"))
+            self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
+            self.success(f"Updated topic {self.old_properties.get('Name')}")
         except Exception as error:
             self.fail(str(error))
 
