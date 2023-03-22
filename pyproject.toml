@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cfn_kafka_admin"
-version = "0.4.5"
+version = "0.4.5.post0"
 description = "AWS CloudFormation Resources to manage Kafka"
 authors = ["johnpreston <john@compose-x.io>"]
 license = "MPL-2.0"
@@ -58,7 +58,7 @@ target-python-version = "3.7"
 github_url = "https://github.com/compose-x/cfn-kafka-admin"
 
 [tool.tbump.version]
-current = "0.4.5"
+current = "0.4.5.post0"
 
 regex = '''
   (?P<major>\d+)
