@@ -13,6 +13,9 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
 ]
 readme = "README.rst"
+[tool.poetry.urls]
+"Source" = "https://github.com/compose-x/cfn-kafka-admin"
+"Bug Tracker" = "https://github.com/compose-x/cfn-kafka-admin/issues"
 
 [tool.poetry.dependencies]
 python = "^3.8"
