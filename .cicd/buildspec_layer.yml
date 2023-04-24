@@ -6,7 +6,7 @@ env:
   variables:
     USE_EPOCH: 0
     DIND_VOL_PATH: /var/lib/docker/volumes/agent-resources_user_volume/_data/srcDownload/src
-    PY_VERSION: 3.8
+    PY_VERSION: 3.10
     PUBLIC_FILES_BUCKET: files.compose-x.io
 
 phases:
@@ -25,7 +25,7 @@ phases:
       - echo $POETRY_BIN_FILE
       - POETRY_BIN_DIR=$(dirname "${POETRY_BIN_FILE}")
       - PATH=$POETRY_BIN_DIR:$PATH
-      - poetry env use system
+      - poetry env use ${PY_VERSION}
       - poetry install
       - POETRY_ENV=`poetry env info --path`
       - echo $POETRY_ENV

@@ -1,9 +1,11 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2021 John Mille<john@ews-network.net>
 
 """Main module."""
-import logging
+
+from __future__ import annotations
+
+import re
 from os import environ
 
 from aws_cfn_custom_resource_resolve_parser import handle
@@ -11,15 +13,15 @@ from cfn_resource_provider import ResourceProvider
 from compose_x_common.compose_x_common import keypresent
 from kafka import errors
 
-from cfn_kafka_admin.kafka.topics_management import (
+from cfn_kafka_admin.common import setup_logging
+from cfn_kafka_admin.kafka_resources.topics_management import (
     create_new_kafka_topic,
     delete_topic,
     update_kafka_topic,
 )
 from cfn_kafka_admin.models.admin import EwsKafkaTopic
 
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.INFO)
+LOG = setup_logging(__name__)
 
 
 class KafkaTopic(ResourceProvider):
@@ -28,7 +30,7 @@ class KafkaTopic(ResourceProvider):
         Init method
         """
         self.cluster_info = {}
-        super(KafkaTopic, self).__init__()
+        super().__init__()
         self.request_schema = EwsKafkaTopic.schema()
 
     def convert_property_types(self):
@@ -117,6 +119,7 @@ class KafkaTopic(ResourceProvider):
                     f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
                 )
         except Exception as error:
+            LOG.exception(error)
             self.physical_resource_id = "could-not-create"
             self.fail(f"Failed to create the topic {self.get('Name')}, {str(error)}")
 
@@ -140,10 +143,10 @@ class KafkaTopic(ResourceProvider):
         Method to delete the Topic resource
         :return:
         """
-        if (
-            self.get("Name") is None
-            and self.physical_resource_id
-            and self.physical_resource_id.startswith("could-not-create")
+        LOG.info("Delet: topic attribute name: {}".format(self.get("Name")))
+        if self.get("Name") is None or (
+            self.physical_resource_id
+            and re.match(r"(.*)could-not-create(.*)$", self.physical_resource_id)
         ):
             LOG.warning("Deleting failed create resource.")
             self.success("Deleting non-working resource")
@@ -156,9 +159,15 @@ class KafkaTopic(ResourceProvider):
                 f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."
             )
         except Exception as error:
-            self.fail(
-                f"Failed to delete topic {self.get_attribute('Name')}. {str(error)}"
-            )
+            LOG.exception(error)
+            if environ.get("DELETE_FAIL_ON_ERROR", None) is None:
+                self.success(
+                    f"Failed to delete topic. But ignoring failure {self.get_attribute('Name')}. {str(error)}"
+                )
+            else:
+                self.fail(
+                    f"Failed to delete topic {self.get_attribute('Name')}. {str(error)}"
+                )
 
 
 def lambda_handler(event, context):

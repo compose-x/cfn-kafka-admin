@@ -311,7 +311,6 @@ class KafkaStack:
         subject_suffix: str,
         deletion_policy,
     ):
-
         definition = self.define_schema_definition_path(
             topic_name, subject_suffix, attribute
         )

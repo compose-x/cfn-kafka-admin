@@ -18,11 +18,10 @@ repos:
     rev: v3.3.1
     hooks:
       - id: pyupgrade
-        args: [ "--py37-plus" ]
-        exclude: ^cfn_kafka_admin/models/
+        args: [ "--py38-plus", "--keep-runtime-typing" ]
 
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.3.0
     hooks:
       - id: black
 

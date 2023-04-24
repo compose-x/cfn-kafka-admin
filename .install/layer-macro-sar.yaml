@@ -43,10 +43,18 @@ Parameters:
   Subnets:
     Type: List<AWS::EC2::Subnet::Id>
 
+  EnableKafkaDebug:
+    Type: String
+    AllowedValues:
+      - "yes"
+      - "no"
+    Default: "no"
+
 Conditions:
   PermissionsBoundaryCon: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
   OverrideLayerVersion: !Not [!Equals [!Ref LambdaLayerVersionArn, "none"]]
   OverrideFunctionName: !Not [!Equals [!Ref FunctionsPrefix, "none"]]
+  DebugKafka: !Not [!Equals [!Ref FunctionsPrefix, "no"]]
 
 
 Resources:
@@ -114,7 +122,12 @@ Resources:
         - OverrideFunctionName
         - !Sub '${FunctionsPrefix}-Topics'
         - cfn-kafka-admin-Topics
-      Runtime: python3.8
+      Runtime: python3.10
+      Environment:
+        Variables: !If
+          - DebugKafka
+          - DEBUG_KAFKA_CLIENT: "true"
+          - !Ref AWS::NoValue
       Handler: index.lambda_handler
       Timeout: 60
       Role: !GetAtt kafkaTopicsFunctionRole.Arn
@@ -173,7 +186,12 @@ Resources:
         - OverrideFunctionName
         - !Sub '${FunctionsPrefix}-ACLs'
         - cfn-kafka-admin-ACLs
-      Runtime: python3.8
+      Runtime: python3.10
+      Environment:
+        Variables: !If
+          - DebugKafka
+          - DEBUG_KAFKA_CLIENT: "true"
+          - !Ref AWS::NoValue
       Handler: index.lambda_handler
       Timeout: 60
       Role: !GetAtt kafkaACLsFunctionRole.Arn
@@ -232,7 +250,7 @@ Resources:
         - OverrideFunctionName
         - !Sub '${FunctionsPrefix}-Schemas'
         - cfn-kafka-admin-Schemas
-      Runtime: python3.8
+      Runtime: python3.10
       Handler: index.lambda_handler
       Role: !GetAtt kafkaSchemasFunctionRole.Arn
       Timeout: 60
@@ -268,7 +286,7 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       CompatibleRuntimes:
-        - python3.8
+        - python3.10
       ContentUri: ${S3_LAYER_UPLOAD_PATH}
       Description: Kafka resources library for AWS CFN
       LayerName: cfn_kafka_admin

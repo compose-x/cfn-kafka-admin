@@ -1,8 +1,9 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2021 John Mille<john@ews-network.net>
 
 """Module to handle the custom resource for Schemas"""
+
+from __future__ import annotations
 
 import json
 import logging
@@ -65,7 +66,7 @@ class KafkaSchema(ResourceProvider):
 
     def __init__(self):
         self.cluster_info = {}
-        super(KafkaSchema, self).__init__()
+        super().__init__()
         self.request_schema = EwsKafkaSchema.schema()
 
     def try_replace_from_secret(self, param):
