@@ -27,7 +27,7 @@ importlib-resources = "^5.7.1"
 PyYAML = "^6.0"
 troposphere = "^4.3"
 kafka-schema-registry-admin = "^0.2.4"
-datamodel-code-generator = { extras = ["http"], version = "^0.12" }
+datamodel-code-generator = { extras = ["http"], version = "^0.18" }
 aws-cfn-custom-resource-resolve-parser = "^0.2.1"
 kafka-python = "^2.0.2"
 cfn-resource-provider = "^1.0.7"
