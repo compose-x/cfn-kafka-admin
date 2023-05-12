@@ -7,6 +7,7 @@ Module to handle Kafka topics management.
 
 import logging
 from os import environ
+from random import randint
 
 from kafka import KafkaConsumer, errors
 from kafka.admin import (
@@ -16,6 +17,7 @@ from kafka.admin import (
     NewPartitions,
     NewTopic,
 )
+from retry import retry
 
 from cfn_kafka_admin.common import KAFKA_LOG, setup_logging
 
@@ -27,7 +29,16 @@ if KAFKA_DEBUG:
     KAFKA_LOG.setLevel(logging.DEBUG)
     KAFKA_LOG.handlers[0].setLevel(logging.DEBUG)
 
+RETRY_ATTEMPTS = max(abs(int(environ.get("CREATE_RETRY_ATTEMPTS", 3))), 5)
+RETRY_JITTER = randint(1, 5)
 
+
+@retry(
+    (errors.KafkaError,),
+    tries=RETRY_ATTEMPTS,
+    jitter=RETRY_JITTER,
+    logger=LOG,
+)
 def create_new_kafka_topic(
     name,
     partitions: int,
@@ -46,6 +57,7 @@ def create_new_kafka_topic(
     """
     if replication_factor < 0:
         raise ValueError("Topic partitions must be >= 1")
+    LOG.debug(f"CREATE_RETRY_ATTEMPTS: {RETRY_ATTEMPTS} - JITTER: {RETRY_JITTER}")
     LOG.info(
         "Attempting to create topic:(partitions/replication/settings): {}: {}/{}/{}".format(
             name, partitions, replication_factor, settings
@@ -55,9 +67,21 @@ def create_new_kafka_topic(
         admin_client = KafkaAdminClient(**cluster_info)
         topic = NewTopic(name, partitions, replication_factor, topic_configs=settings)
         admin_client.create_topics([topic])
+        LOG.info(
+            "Successfully created topic:(partitions/replication): {}: {}/{}".format(
+                name, partitions, replication_factor
+            )
+        )
         return name
     except errors.TopicAlreadyExistsError as error:
         LOG.exception(error)
+        LOG.error(
+            LOG.info(
+                "Failed to create topic:(partitions/replication): {}: {}/{}".format(
+                    name, partitions, replication_factor
+                )
+            )
+        )
         raise errors.TopicAlreadyExistsError(f"Topic {name} already exists")
 
 
@@ -73,6 +97,7 @@ def delete_topic(name, cluster_info):
     LOG.info(f"Deleting Topic {name}")
     try:
         admin_client.delete_topics([name])
+        LOG.debug(f"Successfully deleted topic:(partitions/replication): {name}")
     except Exception as error:
         LOG.exception(error)
         raise

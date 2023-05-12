@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging as logthings
 import re
 import sys
+from copy import deepcopy
 
 
 class MyFormatter(logthings.Formatter):
@@ -14,16 +15,37 @@ class MyFormatter(logthings.Formatter):
     date_format = "%Y-%m-%d %H:%M:%S"
 
     @classmethod
-    def _filter(cls, record: str):
-        return re.sub(r"eyJ(.*)[\w]+", "eyJ******", record)
+    def _filter_out(cls, record: str):
+        if not isinstance(record, str):
+            return record
+        jwt = re.compile(r"eyJ(.*)[\w]+")
+        password_dict_value = re.compile(r"(.*)password\':(.*)\'(?P<password>.*)\'")
+        __filters = [jwt, password_dict_value]
+        for _filter in __filters:
+            if _filter.match(record):
+                return _filter.sub("******", record)
+        return record
+
+    def _filter(self, record):
+        record.msg = self._filter_out(record.msg)
+        if isinstance(record.args, dict):
+            args = deepcopy(record.args)
+            for k, v in record.args.items():
+                if k.find("password") >= 0:
+                    args[k] = "******"
+                else:
+                    args[k] = self._filter_out(v)
+            record.args = args
+        else:
+            record.args = tuple(self._filter_out(arg) for arg in record.args)
 
     def format(self, record) -> str:
+        self._filter(record)
         if record.levelno == logthings.DEBUG:
             formatter = logthings.Formatter(self.debug_format, self.date_format)
         else:
             formatter = logthings.Formatter(self.default_format, self.date_format)
-        output = formatter.format(record)
-        return self._filter(output)
+        return formatter.format(record)
 
 
 class InfoFilter(logthings.Filter):

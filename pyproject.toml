@@ -31,6 +31,7 @@ datamodel-code-generator = { extras = ["http"], version = "^0.12" }
 aws-cfn-custom-resource-resolve-parser = "^0.2.1"
 kafka-python = "^2.0.2"
 cfn-resource-provider = "^1.0.7"
+retry2 = "^0.9.5"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"

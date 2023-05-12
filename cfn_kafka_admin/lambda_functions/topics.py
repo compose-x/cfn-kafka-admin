@@ -10,6 +10,7 @@ from os import environ
 
 from aws_cfn_custom_resource_resolve_parser import handle
 from cfn_resource_provider import ResourceProvider
+from cfn_resource_provider.resource_provider import is_int
 from compose_x_common.compose_x_common import keypresent
 from kafka import errors
 
@@ -23,6 +24,19 @@ from cfn_kafka_admin.models.admin import EwsKafkaTopic
 
 LOG = setup_logging(__name__)
 
+INT_RE = re.compile(r"(^[1-9]+\d*$|^0$)")
+FLOAT_RE = re.compile(r"(^\d+\.\d+$|^\.\d+$)")
+
+
+def is_float(number: str) -> bool:
+    if len(number) > 0 and number[0] in ("-", "+"):
+        match = FLOAT_RE.match(number[1:])
+    else:
+        match = FLOAT_RE.match(number)
+    if not match:
+        return False
+    return True
+
 
 class KafkaTopic(ResourceProvider):
     def __init__(self):
@@ -33,7 +47,34 @@ class KafkaTopic(ResourceProvider):
         super().__init__()
         self.request_schema = EwsKafkaTopic.schema()
 
+    def heuristic_convert_property_types(self, properties):
+        """
+        heuristic type conversion of string values in `properties`.
+        """
+        if isinstance(properties, dict):
+            for name in properties:
+                properties[name] = self.heuristic_convert_property_types(
+                    properties[name]
+                )
+        elif isinstance(properties, list):
+            for i, v in enumerate(properties):
+                properties[i] = self.heuristic_convert_property_types(v)
+        elif isinstance(properties, str):
+            v = str(properties)
+            if v == "true":
+                return True
+            elif v == "false":
+                return False
+            elif is_float(v):
+                return float(v)
+            elif is_int(v):
+                return int(v)
+            else:
+                pass
+        return properties
+
     def convert_property_types(self):
+        self.heuristic_convert_property_types(self.properties)
         int_props = ["PartitionsCount", "ReplicationFactor"]
         boolean_props = ["IsConfluentKafka"]
         for prop in int_props:
