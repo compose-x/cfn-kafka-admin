@@ -30,8 +30,9 @@ kafka-schema-registry-admin = "^0.2.4"
 datamodel-code-generator = { extras = ["http"], version = "^0.18" }
 aws-cfn-custom-resource-resolve-parser = "^0.2.1"
 kafka-python = "^2.0.2"
-cfn-resource-provider = "^1.0.7"
+cfn-resource-provider = "^1.0"
 retry2 = "^0.9.5"
+confluent-kafka = "^2.1.1"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
@@ -49,6 +50,7 @@ Sphinx = "^4.5.0"
 sphinx-material = "^0.0.35"
 sphinx-jsonschema = "^1.19.1"
 pyupgrade = "^3.3.1"
+testcontainers = "^3.7.1"
 
 [tool.datamodel-codegen]
 input = "cfn_kafka_admin/specs/aws-cfn-kafka-admin-provider-schema.json"

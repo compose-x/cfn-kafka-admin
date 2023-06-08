@@ -139,7 +139,7 @@ class KafkaTopic(ResourceProvider):
                 self.get("PartitionsCount"),
                 self.cluster_info,
                 replication_factor=self.get("ReplicationFactor"),
-                settings=self.get("Settings"),
+                topic_config=self.get("Settings"),
             )
             self.physical_resource_id = topic_name
             self.set_attribute("Name", self.get("Name"))

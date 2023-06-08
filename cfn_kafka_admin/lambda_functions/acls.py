@@ -99,19 +99,21 @@ class KafkaACL(ResourceProvider):
             if not keyisset("Host", policy):
                 policy.update({"Host": "*"})
         new_policies = self.get("Policies")
-        acls = differentiate_old_new_acls(new_policies, old_policies)
+        new_acls, to_delete_acls = differentiate_old_new_acls(
+            new_policies, old_policies
+        )
         LOG.info("ACLs deletion")
-        LOG.info(acls[1])
+        LOG.info(to_delete_acls)
         LOG.info("ACLs set")
-        LOG.info(acls[0])
+        LOG.info(new_acls)
         try:
-            delete_acls(acls[1], self.cluster_info)
+            to_delete_acls(to_delete_acls, self.cluster_info)
         except Exception as error:
             LOG.error("Failed to delete old ACLs - Moving on")
             LOG.error(error)
-            LOG.error(acls[1])
+            LOG.error(to_delete_acls)
         try:
-            create_new_acls(acls[0], self.cluster_info)
+            create_new_acls(new_acls, self.cluster_info)
             self.success()
             LOG.info("Successfully created new ACLs")
         except Exception as error:
