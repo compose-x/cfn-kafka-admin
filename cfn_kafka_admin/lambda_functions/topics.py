@@ -176,6 +176,13 @@ class KafkaTopic(ResourceProvider):
                 self.cluster_info,
                 settings=self.get("Settings"),
             )
+            self.physical_resource_id = self.get("Name")
+            self.set_attribute("Name", self.get("Name"))
+            self.set_attribute("Partitions", self.get("PartitionsCount"))
+            self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
+            self.success(
+                reason="Topic {} successfully updated.".format(self.get("Name"))
+            )
         except Exception as error:
             self.fail(str(error))
 
