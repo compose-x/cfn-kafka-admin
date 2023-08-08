@@ -63,6 +63,12 @@ def create_new_kafka_topic(
             name, partitions, replication_factor, settings
         )
     )
+    cluster_info.update(
+        {
+            "client_id": "CREATE_TOPICS"
+            + environ.get("AWS_LAMBDA_FUNCTION_NAME", "cfn-kafka-Topics")
+        }
+    )
     try:
         admin_client = KafkaAdminClient(**cluster_info)
         topic = NewTopic(name, partitions, replication_factor, topic_configs=settings)
@@ -93,6 +99,12 @@ def delete_topic(name, cluster_info):
     :param cluster_info: cluster information
     :return:
     """
+    cluster_info.update(
+        {
+            "client_id": "DELETE_TOPICS"
+            + environ.get("AWS_LAMBDA_FUNCTION_NAME", "cfn-kafka-Topics")
+        }
+    )
     admin_client = KafkaAdminClient(**cluster_info)
     LOG.info(f"Deleting Topic {name}")
     try:
