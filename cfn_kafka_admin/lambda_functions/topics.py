@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os.path
 import re
 from os import environ
 

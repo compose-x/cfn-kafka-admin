@@ -15,7 +15,8 @@ try:
     from confluent_kafka.cimpl import KafkaError, KafkaException
 
     USE_CONFLUENT = True
-except ImportError:
+except ImportError as error:
+    print("FAILED TO IMPORT CONFLUENT PYTHON", error)
     USE_CONFLUENT = False
 
 from kafka import KafkaConsumer, errors

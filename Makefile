@@ -24,7 +24,7 @@ export PRINT_HELP_PYSCRIPT
 BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
 ifndef PYTHON_VERSION
-PYTHON_VERSION	:= python38
+PYTHON_VERSION	:= python39
 endif
 
 help:
@@ -87,7 +87,7 @@ python39	: clean
 			test -d layer && rm -rf layer || mkdir layer
 			docker run -u $(shell bash -c 'id -u'):$(shell bash -c 'id -u') \
 			--rm -v $(PWD):/app --entrypoint /bin/bash \
-			public.ecr.aws/compose-x/python:3.9 \
+			public.ecr.aws/lambda/python:3.9 \
 			-c "pip install --no-cache-dir /app/dist/*.whl -t /app/layer"
 
 python38	: clean

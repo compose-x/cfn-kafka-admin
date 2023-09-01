@@ -7,6 +7,7 @@ Module to handle Kafka topics management.
 
 from __future__ import annotations
 
+import datetime
 import logging
 from os import environ
 from random import randint
@@ -14,13 +15,16 @@ from typing import TYPE_CHECKING, Union
 
 try:
     from confluent_kafka.admin import AdminClient
+    from confluent_kafka.admin import ConfigResource as ConfluentConfigResource
     from confluent_kafka.admin import NewTopic as ConfluentNewTopic
     from confluent_kafka.admin._metadata import ClusterMetadata, TopicMetadata
+    from confluent_kafka.admin._resource import ResourceType
     from confluent_kafka.cimpl import KafkaError as ConfluentKafkaError
     from confluent_kafka.cimpl import KafkaException as ConfluentKafkaException
 
     USE_CONFLUENT = False
-except ImportError:
+except ImportError as error:
+    print("FAILED TO IMPORT CONFLUENT PYTHON", error)
     USE_CONFLUENT = False
 
 from kafka import KafkaConsumer, errors
@@ -48,19 +52,22 @@ RETRY_ATTEMPTS = max(abs(int(environ.get("CREATE_RETRY_ATTEMPTS", 3))), 5)
 RETRY_JITTER = randint(1, 5)
 
 
-# @retry(
-#     (errors.KafkaError,),
-#     tries=RETRY_ATTEMPTS,
-#     jitter=RETRY_JITTER,
-#     logger=LOG,
-# )
+@retry(
+    (
+        errors.KafkaError,
+        ConfluentKafkaError,
+    ),
+    tries=RETRY_ATTEMPTS,
+    jitter=RETRY_JITTER,
+    logger=LOG,
+)
 def create_new_kafka_topic(
     name,
     partitions: int,
     cluster_info: dict,
     replication_factor: int = 1,
     topic_config: dict = None,
-):
+) -> str:
     """
     Function to create new Kafka topic
 
@@ -105,14 +112,36 @@ def create_new_kafka_topic(
             raise errors.TopicAlreadyExistsError(f"Topic {name} already exists")
     else:
         LOG.info("Using confluent-kafka python lib.")
-        new_topic = ConfluentNewTopic(name, partitions, replication_factor)
+        if topic_config:
+            new_topic = ConfluentNewTopic(
+                name, partitions, replication_factor, config=topic_config
+            )
+        else:
+            new_topic = ConfluentNewTopic(name, partitions, replication_factor)
+        LOG.info(datetime.datetime.utcnow().isoformat())
         ret = admin_client.create_topics([new_topic], validate_only=False)
         for _topic, fnc in ret.items():
             try:
+                while not fnc.done():
+                    pass
                 fnc.result()
+                LOG.info(datetime.datetime.utcnow().isoformat())
+                desc = admin_client.describe_configs(
+                    [ConfluentConfigResource(ResourceType.TOPIC, _topic)]
+                )
+                for _config in desc.values():
+                    while not _config.done():
+                        _config.result()
+                    LOG.info(
+                        f"Confluent LIB. Created topic: {_topic} - {_config.result()}"
+                    )
             except ConfluentKafkaException as error:
-                print(error.args[0] == ConfluentKafkaError.TOPIC_ALREADY_EXISTS)
-                raise errors.TopicAlreadyExistsError(f"Topic {name} already exists")
+                print(error)
+                if error.args[0] == ConfluentKafkaError.TOPIC_ALREADY_EXISTS:
+                    raise errors.TopicAlreadyExistsError(f"Topic {name} already exists")
+                else:
+                    raise
+        return name
 
 
 def delete_topic(name, cluster_info):
@@ -124,7 +153,7 @@ def delete_topic(name, cluster_info):
     """
     admin_client = get_admin_client(cluster_info)
     if isinstance(admin_client, KafkaAdminClient):
-        LOG.info("Using kafka-python lib.")
+        LOG.info("Delete: using kafka-python lib.")
         LOG.info(f"Deleting Topic {name}")
         try:
             admin_client.delete_topics([name])
@@ -135,11 +164,35 @@ def delete_topic(name, cluster_info):
             LOG.exception(error)
             raise
     else:
-        LOG.info("Using confluent-kafka python lib.")
+        LOG.info("Delete: using confluent-kafka python lib.")
         try:
+            LOG.info(datetime.datetime.utcnow().isoformat())
+            desc = admin_client.describe_configs(
+                [ConfluentConfigResource(ResourceType.TOPIC, name)]
+            )
+            for _config in desc.values():
+                while not _config.done():
+                    _config.result()
+                LOG.info(f"Confluent LIB. Deleting topic: {name} - {_config.result()}")
             ret = admin_client.delete_topics([name])
             for _topic, fnc in ret.items():
-                fnc.result()
+                while not fnc.done():
+                    fnc.result()
+            LOG.info(datetime.datetime.utcnow().isoformat())
+            LOG.info("Trying to check topic is gone with describe")
+            try:
+                desc = admin_client.describe_configs(
+                    [ConfluentConfigResource(ResourceType.TOPIC, name)]
+                )
+                for _config in desc.values():
+                    while not _config.done():
+                        _config.result()
+            except ConfluentKafkaException as error:
+                if error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
+                    LOG.info(f"Topic successfully deleted: {name}")
+                else:
+                    LOG.error(f"Topic describe {name} failed")
+                    LOG.exception(error)
         except ConfluentKafkaException as error:
             kafka_error = error.args[0]
             if kafka_error == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
