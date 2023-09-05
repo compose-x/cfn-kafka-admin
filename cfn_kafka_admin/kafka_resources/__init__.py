@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import os
 from copy import deepcopy
 from typing import Union
 
@@ -52,9 +53,13 @@ def get_admin_client(
 ) -> Union[AdminClient, KafkaAdminClient]:
     """Creates a new Admin client, confluent first if import worked"""
     client_id: str = f"LAMBDA_{operation}_{topic_dest}"
+    timeout_ms_env = int(os.environ.get("ADMIN_REQUEST_TIMEOUT_MS", 60000))
     settings.update({"client_id": client_id})
     if USE_CONFLUENT:
         cluster_info = convert_kafka_python_to_confluent_kafka(settings)
         cluster_info.update({"debug": "broker,admin"})
+        cluster_info.update(
+            {"request.timeout.ms": timeout_ms_env if timeout_ms_env >= 60000 else 60000}
+        )
         return AdminClient(cluster_info)
     return KafkaAdminClient(**settings)

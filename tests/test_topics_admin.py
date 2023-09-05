@@ -25,11 +25,6 @@ def list_topics(con_settings: dict):
         res = client.list_topics()
         for _topic in res.topics.values():
             print(_topic.topic, len(_topic.partitions))
-            # desc = client.describe_configs([ConfigResource(ResourceType.TOPIC, _topic.topic)])
-            # for _config in desc.values():
-            #     while not _config.done():
-            #         pass
-            #     _topics.update({_topic.topic: _config.result()})
         return res.topics
 
 

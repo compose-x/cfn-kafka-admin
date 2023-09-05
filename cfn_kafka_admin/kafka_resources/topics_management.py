@@ -124,31 +124,30 @@ def create_new_kafka_topic(
             try:
                 while not fnc.done():
                     fnc.result()
-                try:
-                    desc = admin_client.describe_configs(
-                        [ConfluentConfigResource(ResourceType.TOPIC, _topic)]
-                    )
-                    for _config in desc.values():
-                        while not _config.done():
-                            _config.result()
-                        LOG.info(
-                            f"Confluent LIB. Created topic: {_topic} - {_config.result()}"
-                        )
-                except ConfluentKafkaException as error:
-                    LOG.exception(error)
-                    if error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
-                        LOG.error(f"Failed to describe topic {name}")
-                        raise
-
-            except ConfluentKafkaException as error:
-                LOG.exception(error)
-                if error.args[0] == ConfluentKafkaError.TOPIC_ALREADY_EXISTS:
+            except ConfluentKafkaException as create_error:
+                LOG.exception(create_error)
+                if create_error.args[0] == ConfluentKafkaError.TOPIC_ALREADY_EXISTS:
                     if environ.get("FAIL_IF_ALREADY_EXISTS", None) is None:
                         return name
                     else:
                         raise errors.TopicAlreadyExistsError(
                             f"Topic {name} already exists"
                         )
+            try:
+                desc = admin_client.describe_configs(
+                    [ConfluentConfigResource(ResourceType.TOPIC, _topic)]
+                )
+                for _config in desc.values():
+                    while not _config.done():
+                        _config.result()
+                    LOG.info(
+                        f"Confluent LIB. Created topic: {_topic} - {_config.result()}"
+                    )
+            except ConfluentKafkaException as describe_error:
+                LOG.exception(describe_error)
+                if describe_error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
+                    LOG.error(f"Failed to describe topic {name}")
+                raise
         return name
 
 
@@ -202,22 +201,22 @@ def delete_topic(name, cluster_info):
                     fnc.result()
             sleep(1)
             LOG.info("Trying to check topic is gone with describe")
-            try:
-                desc = admin_client.describe_configs(
-                    [ConfluentConfigResource(ResourceType.TOPIC, name)]
-                )
-                for _config in desc.values():
-                    while not _config.done():
-                        _config.result()
-            except ConfluentKafkaException as error:
-                if error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
-                    LOG.info(f"Topic successfully deleted: {name}")
-                    return
-                else:
-                    LOG.error(f"Topic describe {name} failed")
-                    LOG.exception(error)
-                    raise
         except Exception as error:
+            LOG.error(f"Failed to delete topic {name}")
+            LOG.exception(error)
+            raise
+        try:
+            desc = admin_client.describe_configs(
+                [ConfluentConfigResource(ResourceType.TOPIC, name)]
+            )
+            for _config in desc.values():
+                while not _config.done():
+                    _config.result()
+        except ConfluentKafkaException as error:
+            if error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
+                LOG.info(f"Topic successfully deleted: {name}")
+                return
+            LOG.error(f"Topic describe {name} failed")
             LOG.exception(error)
             raise
 
