@@ -3,7 +3,6 @@
 
 """Main package to manage Kafka resources"""
 
-
 from __future__ import annotations
 
 from copy import deepcopy
@@ -34,6 +33,7 @@ KAFKA_TO_CONFLUENT_MAPPING: dict = {
     "sasl_mechanism": "sasl.mechanism",
     "sasl_plain_username": "sasl.username",
     "sasl_plain_password": "sasl.password",
+    "client_id": "client.id",
 }
 
 
@@ -47,9 +47,14 @@ def convert_kafka_python_to_confluent_kafka(settings: dict) -> dict:
     return new_settings
 
 
-def get_admin_client(settings: dict) -> Union[AdminClient, KafkaAdminClient]:
+def get_admin_client(
+    settings: dict, operation: str, topic_dest: str
+) -> Union[AdminClient, KafkaAdminClient]:
     """Creates a new Admin client, confluent first if import worked"""
+    client_id: str = f"LAMBDA_{operation}_{topic_dest}"
+    settings.update({"client_id": client_id})
     if USE_CONFLUENT:
         cluster_info = convert_kafka_python_to_confluent_kafka(settings)
+        cluster_info.update({"debug": "broker,admin"})
         return AdminClient(cluster_info)
     return KafkaAdminClient(**settings)

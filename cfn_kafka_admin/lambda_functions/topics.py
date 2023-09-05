@@ -148,18 +148,10 @@ class KafkaTopic(ResourceProvider):
             self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
             self.success(f"Created new topic {topic_name}")
         except errors.TopicAlreadyExistsError as error:
-            if environ.get("FAIL_IF_ALREADY_EXISTS", None) is None:
-                LOG.info(f"{self.get('Name')} - Importing existing Topic")
-                self.physical_resource_id = self.get("Name")
-                self.set_attribute("Name", self.get("Name"))
-                self.set_attribute("Partitions", self.get("PartitionsCount"))
-                self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
-                self.success("Existing topic imported")
-            else:
-                self.physical_resource_id = "could-not-create-nor-import"
-                self.fail(
-                    f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
-                )
+            self.physical_resource_id = "could-not-create-nor-import"
+            self.fail(
+                f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
+            )
         except Exception as error:
             LOG.exception(error)
             self.physical_resource_id = "could-not-create"

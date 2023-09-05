@@ -1,4 +1,5 @@
 """Tests topics creation, delete and update"""
+import os
 
 import pytest
 from confluent_kafka.admin import AdminClient as ConfluentAdminClient
@@ -18,7 +19,7 @@ from cfn_kafka_admin.kafka_resources.topics_management import (
 
 
 def list_topics(con_settings: dict):
-    client = get_admin_client(con_settings)
+    client = get_admin_client(con_settings, "LIST", "_all")
     _topics: dict = {}
     if isinstance(client, ConfluentAdminClient):
         res = client.list_topics()
@@ -60,6 +61,7 @@ def test_create_duplicate_topic():
         cluster_settings = {"bootstrap_servers": connection}
         create_new_kafka_topic("dummy-no-settings", 1, cluster_settings, 1, {})
         list_topics(cluster_settings)
+        os.environ["FAIL_IF_ALREADY_EXISTS"] = "True"
         with pytest.raises(errors.TopicAlreadyExistsError):
             create_new_kafka_topic("dummy-no-settings", 1, cluster_settings, 1, {})
 
