@@ -185,7 +185,11 @@ class KafkaTopic(ResourceProvider):
         :return:
         """
         LOG.info("Delet: topic attribute name: {}".format(self.get("Name")))
-        if self.get("Name") is None or (
+        LOG.info(f"DELETE: {self.stack_id} - {self.physical_resource_id}")
+        if self.get("Name") and self.get("Name") != self.physical_resource_id:
+            self.success("Name does not match physical ID. Skipping.")
+            return
+        elif self.get("Name") is None or (
             self.physical_resource_id
             and re.match(r"(.*)could-not-create(.*)$", self.physical_resource_id)
         ):
@@ -195,7 +199,6 @@ class KafkaTopic(ResourceProvider):
         try:
             self.define_cluster_info()
             delete_topic(self.get("Name"), self.cluster_info)
-        except errors.UnknownTopicOrPartitionError:
             self.success(
                 f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."
             )

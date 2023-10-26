@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import os
 from os import environ
 from random import randint
 from time import sleep
@@ -56,9 +57,9 @@ RETRY_JITTER = randint(1, 5)
 @retry(
     (
         errors.KafkaError,
-        ConfluentKafkaError,
+        ConfluentKafkaException,
     ),
-    tries=RETRY_ATTEMPTS,
+    # tries=RETRY_ATTEMPTS,
     jitter=RETRY_JITTER,
     logger=LOG,
 )
@@ -80,7 +81,6 @@ def create_new_kafka_topic(
     """
     if replication_factor < 0:
         raise ValueError("Topic partitions must be >= 1")
-    LOG.debug(f"CREATE_RETRY_ATTEMPTS: {RETRY_ATTEMPTS} - JITTER: {RETRY_JITTER}")
     LOG.info(
         "Attempting to create topic:(partitions/replication/settings): {}: {}/{}/{}".format(
             name, partitions, replication_factor, topic_config
@@ -133,28 +133,46 @@ def create_new_kafka_topic(
                         raise errors.TopicAlreadyExistsError(
                             f"Topic {name} already exists"
                         )
-            try:
-                desc = admin_client.describe_configs(
-                    [ConfluentConfigResource(ResourceType.TOPIC, _topic)]
-                )
-                for _config in desc.values():
-                    while not _config.done():
-                        _config.result()
-                    LOG.info(
-                        f"Confluent LIB. Created topic: {_topic} - {_config.result()}"
-                    )
-            except ConfluentKafkaException as describe_error:
-                LOG.exception(describe_error)
-                if describe_error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
-                    LOG.error(f"Failed to describe topic {name}")
-                raise
+                raise errors.KafkaConnectionError(f"Failed to create topic {name}")
+        _wait_time = abs(
+            int(os.environ.get("CREATE_DESCRIBE_WAIT_TIME", RETRY_JITTER + 2))
+        )
+        LOG.info(f"CREATE {name} - Waiting {_wait_time} before validation")
+        sleep(0)
+        validate_topic_created(admin_client, name)
         return name
 
 
 @retry(
     (
         errors.KafkaError,
-        ConfluentKafkaError,
+        ConfluentKafkaException,
+    ),
+    # tries=RETRY_ATTEMPTS,
+    jitter=RETRY_JITTER,
+    logger=LOG,
+)
+def validate_topic_created(admin_client, topic: str):
+    try:
+        desc = admin_client.describe_configs(
+            [ConfluentConfigResource(ResourceType.TOPIC, topic)]
+        )
+        for _config in desc.values():
+            while not _config.done():
+                _config.result()
+            LOG.info(f"Confluent LIB. Created topic: {topic} - {_config.result()}")
+    except ConfluentKafkaException as describe_error:
+        LOG.error(f"Create {topic}: Failed at describe validation.")
+        LOG.exception(describe_error)
+        if describe_error.args[0] == ConfluentKafkaError.UNKNOWN_TOPIC_OR_PART:
+            LOG.error(f"Failed to describe topic {topic}")
+        raise describe_error
+
+
+@retry(
+    (
+        errors.KafkaError,
+        ConfluentKafkaException,
     ),
     tries=RETRY_ATTEMPTS,
     jitter=RETRY_JITTER,

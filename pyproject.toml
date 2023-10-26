@@ -25,7 +25,7 @@ compose-x-common = "^1.2"
 jsonschema = "4.17.3"
 importlib-resources = "^6.0"
 PyYAML = "^6.0"
-troposphere = "^4.3"
+troposphere = "4.4.1"
 kafka-schema-registry-admin = "^0.2"
 datamodel-code-generator = { extras = ["http"], version = "^0.18" }
 aws-cfn-custom-resource-resolve-parser = "^0.3"

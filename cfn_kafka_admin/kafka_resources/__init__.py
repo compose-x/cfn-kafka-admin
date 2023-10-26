@@ -10,9 +10,7 @@ from copy import deepcopy
 from typing import Union
 
 try:
-    from confluent_kafka.admin import AdminClient, NewTopic
-    from confluent_kafka.admin._metadata import ClusterMetadata, TopicMetadata
-    from confluent_kafka.cimpl import KafkaError, KafkaException
+    from confluent_kafka.admin import AdminClient
 
     USE_CONFLUENT = True
 except ImportError as error:
@@ -54,10 +52,11 @@ def get_admin_client(
     """Creates a new Admin client, confluent first if import worked"""
     client_id: str = f"LAMBDA_{operation}_{topic_dest}"
     timeout_ms_env = int(os.environ.get("ADMIN_REQUEST_TIMEOUT_MS", 60000))
+    print(f"REQUEST TIMEOUT MS: {timeout_ms_env}")
     settings.update({"client_id": client_id})
     if USE_CONFLUENT:
         cluster_info = convert_kafka_python_to_confluent_kafka(settings)
-        cluster_info.update({"debug": "broker,admin"})
+        # cluster_info.update({"debug": "broker,admin"})
         cluster_info.update(
             {"request.timeout.ms": timeout_ms_env if timeout_ms_env >= 60000 else 60000}
         )
