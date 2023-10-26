@@ -143,7 +143,7 @@ class TopicsSettings(BaseModel):
         description="https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_cleanup.policy",
     )
     compression_type: Optional[CompressionType] = Field(
-        "producer",
+        None,
         alias="compression.type",
         description="https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_compression.type",
     )
