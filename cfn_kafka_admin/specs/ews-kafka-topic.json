@@ -116,7 +116,6 @@
             "gzip",
             "producer"
           ],
-          "default": "producer",
           "description": "https://docs.confluent.io/platform/current/installation/configuration/topic-configs.html#topicconfigs_compression.type"
         },
         "delete.retention.ms": {
