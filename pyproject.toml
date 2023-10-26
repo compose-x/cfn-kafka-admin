@@ -4,6 +4,7 @@ version = "0.6.0-rc1"
 description = "AWS CloudFormation Resources to manage Kafka"
 authors = ["John Mille <john@compose-x.io>"]
 classifiers = [
+  "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
   "Natural Language :: English",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.8",
@@ -13,7 +14,7 @@ classifiers = [
 ]
 
 readme = "README.rst"
-license = "LICENSE"
+license = "MPL-2.0"
 
 [tool.poetry.urls]
 "Source" = "https://github.com/compose-x/cfn-kafka-admin"
