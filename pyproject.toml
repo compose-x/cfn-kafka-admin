@@ -22,7 +22,7 @@ license = "MPL-2.0"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-compose-x-common = "^1.2"
+compose-x-common = "^1.4"
 jsonschema = "4.17.3"
 importlib-resources = "^6.0"
 PyYAML = "^6.0"
