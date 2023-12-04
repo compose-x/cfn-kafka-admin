@@ -15,11 +15,9 @@ from compose_x_common.compose_x_common import keypresent
 from kafka import errors
 
 from cfn_kafka_admin.common import setup_logging
-from cfn_kafka_admin.kafka_resources.topics_management import (
-    create_new_kafka_topic,
-    delete_topic,
-    update_kafka_topic,
-)
+from cfn_kafka_admin.kafka_resources.topics.create import create_new_kafka_topic
+from cfn_kafka_admin.kafka_resources.topics.delete import delete_topic
+from cfn_kafka_admin.kafka_resources.topics.update import update_kafka_topic
 from cfn_kafka_admin.models.admin import EwsKafkaTopic
 
 LOG = setup_logging(__name__)
@@ -139,7 +137,7 @@ class KafkaTopic(ResourceProvider):
                 self.get("PartitionsCount"),
                 self.cluster_info,
                 replication_factor=self.get("ReplicationFactor"),
-                settings=self.get("Settings"),
+                topic_config=self.get("Settings"),
             )
             self.physical_resource_id = topic_name
             self.set_attribute("Name", self.get("Name"))
@@ -147,18 +145,10 @@ class KafkaTopic(ResourceProvider):
             self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
             self.success(f"Created new topic {topic_name}")
         except errors.TopicAlreadyExistsError as error:
-            if environ.get("FAIL_IF_ALREADY_EXISTS", None) is None:
-                LOG.info(f"{self.get('Name')} - Importing existing Topic")
-                self.physical_resource_id = self.get("Name")
-                self.set_attribute("Name", self.get("Name"))
-                self.set_attribute("Partitions", self.get("PartitionsCount"))
-                self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
-                self.success("Existing topic imported")
-            else:
-                self.physical_resource_id = "could-not-create-nor-import"
-                self.fail(
-                    f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
-                )
+            self.physical_resource_id = "could-not-create-nor-import"
+            self.fail(
+                f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
+            )
         except Exception as error:
             LOG.exception(error)
             self.physical_resource_id = "could-not-create"
@@ -192,7 +182,11 @@ class KafkaTopic(ResourceProvider):
         :return:
         """
         LOG.info("Delet: topic attribute name: {}".format(self.get("Name")))
-        if self.get("Name") is None or (
+        LOG.info(f"DELETE: {self.stack_id} - {self.physical_resource_id}")
+        if self.get("Name") and self.get("Name") != self.physical_resource_id:
+            self.success("Name does not match physical ID. Skipping.")
+            return
+        elif self.get("Name") is None or (
             self.physical_resource_id
             and re.match(r"(.*)could-not-create(.*)$", self.physical_resource_id)
         ):
@@ -202,7 +196,6 @@ class KafkaTopic(ResourceProvider):
         try:
             self.define_cluster_info()
             delete_topic(self.get("Name"), self.cluster_info)
-        except errors.UnknownTopicOrPartitionError:
             self.success(
                 f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."
             )

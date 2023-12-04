@@ -49,6 +49,15 @@ Parameters:
       - "yes"
       - "no"
     Default: "no"
+  FunctionsTimeout:
+    Type: Number
+    Description: Timeout, in seconds, for the Lambda functions
+    Default: 75
+
+  KafkaClientTimeout:
+    Type: Number
+    Description: Timeout in milliseconds, for the lambda functions. Must me shorter than FunctionsTimeout *1000
+    Default: 60000
 
 Conditions:
   PermissionsBoundaryCon: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
@@ -124,12 +133,15 @@ Resources:
         - cfn-kafka-admin-Topics
       Runtime: python3.10
       Environment:
-        Variables: !If
-          - DebugKafka
-          - DEBUG_KAFKA_CLIENT: "true"
-          - !Ref AWS::NoValue
+        Variables:
+          DEBUG_KAFKA_CLIENT: !If
+            - DebugKafka
+            - "true"
+            - !Ref AWS::NoValue
+          ADMIN_REQUEST_TIMEOUT_MS: !Ref KafkaClientTimeout
+
       Handler: index.lambda_handler
-      Timeout: 180
+      Timeout: !Ref FunctionsTimeout
       Role: !GetAtt kafkaTopicsFunctionRole.Arn
       VpcConfig:
         SecurityGroupIds:
@@ -188,12 +200,14 @@ Resources:
         - cfn-kafka-admin-ACLs
       Runtime: python3.10
       Environment:
-        Variables: !If
-          - DebugKafka
-          - DEBUG_KAFKA_CLIENT: "true"
-          - !Ref AWS::NoValue
+        Variables:
+          DEBUG_KAFKA_CLIENT: !If
+            - DebugKafka
+            - "true"
+            - !Ref AWS::NoValue
+          ADMIN_REQUEST_TIMEOUT_MS: !Ref KafkaClientTimeout
       Handler: index.lambda_handler
-      Timeout: 180
+      Timeout: !Ref FunctionsTimeout
       Role: !GetAtt kafkaACLsFunctionRole.Arn
       VpcConfig:
         SecurityGroupIds:
@@ -253,7 +267,7 @@ Resources:
       Runtime: python3.10
       Handler: index.lambda_handler
       Role: !GetAtt kafkaSchemasFunctionRole.Arn
-      Timeout: 180
+      Timeout: !Ref FunctionsTimeout
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt functionsSecurityGroup.GroupId
