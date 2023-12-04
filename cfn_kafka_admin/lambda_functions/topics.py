@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import os.path
 import re
 from os import environ
 
@@ -16,11 +15,9 @@ from compose_x_common.compose_x_common import keypresent
 from kafka import errors
 
 from cfn_kafka_admin.common import setup_logging
-from cfn_kafka_admin.kafka_resources.topics_management import (
-    create_new_kafka_topic,
-    delete_topic,
-    update_kafka_topic,
-)
+from cfn_kafka_admin.kafka_resources.topics.create import create_new_kafka_topic
+from cfn_kafka_admin.kafka_resources.topics.delete import delete_topic
+from cfn_kafka_admin.kafka_resources.topics.update import update_kafka_topic
 from cfn_kafka_admin.models.admin import EwsKafkaTopic
 
 LOG = setup_logging(__name__)

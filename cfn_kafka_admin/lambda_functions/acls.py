@@ -12,7 +12,7 @@ from cfn_resource_provider import ResourceProvider
 from compose_x_common.compose_x_common import keyisset, keypresent
 
 from cfn_kafka_admin.common import setup_logging
-from cfn_kafka_admin.kafka_resources.acls_management import (
+from cfn_kafka_admin.kafka_resources.acls import (
     create_new_acls,
     delete_acls,
     differentiate_old_new_acls,

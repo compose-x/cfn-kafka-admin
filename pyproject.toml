@@ -26,14 +26,14 @@ compose-x-common = "^1.4"
 jsonschema = "4.17.3"
 importlib-resources = "^6.0"
 PyYAML = "^6.0"
-troposphere = "4.4.1"
+troposphere = "^4.5.1"
 kafka-schema-registry-admin = "^0.2"
-datamodel-code-generator = { extras = ["http"], version = "^0.18" }
+datamodel-code-generator = { extras = ["http"], version = "^0.25" }
 aws-cfn-custom-resource-resolve-parser = "^0.3"
 kafka-python = "^2.0.2"
 cfn-resource-provider = "^1.0.7"
 retry2 = "^0.9.5"
-confluent-kafka = "^2.1.1"
+confluent-kafka = "^2.3"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
