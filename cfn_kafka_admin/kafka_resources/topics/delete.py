@@ -37,11 +37,10 @@ def delete_topic(topic_name: str, cluster_info: dict):
     :param cluster_info: cluster information
     """
     admin_client = get_admin_client(cluster_info, "DELETE", topic_name)
-
-    LOG.info("Delete: using confluent-kafka python lib.")
     try:
         configs = describe_topic_configs(admin_client, topic_name, result_only=True)
-        LOG.info(f"Confluent LIB. Deleting topic: {topic_name} - {configs}")
+        LOG.info(f"Deleting topic: {topic_name}")
+        LOG.debug(f"{topic_name} => {configs}")
     except KafkaException as error:
         if error.args[0] == KafkaError.UNKNOWN_TOPIC_OR_PART:
             LOG.info(f"Topic did not exist: {topic_name}")

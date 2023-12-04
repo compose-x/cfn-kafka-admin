@@ -3,9 +3,7 @@
 
 from __future__ import annotations
 
-import os
 from os import environ
-from time import sleep
 
 from confluent_kafka import KafkaError, KafkaException
 from confluent_kafka.admin import ConfigResource, ResourceType
@@ -92,7 +90,7 @@ def create_new_kafka_topic(
 def validate_topic_created(admin_client, topic_config_resource: ConfigResource):
     try:
         desc = wait_for_result(admin_client.describe_configs([topic_config_resource]))
-        LOG.info("Confluent LIB. Created topic: " f"{topic_config_resource.name}")
+        LOG.info("Created topic: " f"{topic_config_resource.name}")
         return desc[topic_config_resource].result()
     except KafkaException as describe_error:
         LOG.error(
