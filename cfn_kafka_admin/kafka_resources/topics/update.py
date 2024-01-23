@@ -98,21 +98,27 @@ def update_kafka_topic(
                     incremental_operation=AlterConfigOpType["SET"],
                 )
                 incremental_configs.append(new_config)
-
-    wait_for_result(
-        admin_client.incremental_alter_configs(
-            [
-                ConfigResource(
-                    ResourceType.TOPIC,
-                    topic_name,
-                    incremental_configs=incremental_configs,
+    for _incremental_config in incremental_configs:
+        try:
+            wait_for_result(
+                admin_client.incremental_alter_configs(
+                    [
+                        ConfigResource(
+                            ResourceType.TOPIC,
+                            topic_name,
+                            incremental_configs=[_incremental_config],
+                        )
+                    ]
                 )
-            ]
-        )
-    )
+            )
+        except Exception as error:
+            LOG.error(
+                f"Error updating topic {topic_name} property {_incremental_config.name}={_incremental_config.value}: {error}"
+            )
+            LOG.exception(error)
+    partitions = update_topic_partitions(admin_client, topic_name, partitions)
     new_topic_configs = describe_topic_configs(
         admin_client, topic_name, result_only=True
     )
     LOG.debug(new_topic_configs)
-    partitions = update_topic_partitions(admin_client, topic_name, partitions)
     return partitions, new_topic_configs

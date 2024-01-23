@@ -123,7 +123,7 @@ class KafkaACL(ResourceProvider):
 
     def delete(self):
         """
-        Method to delete the Topic resource
+        Method to delete the ACLs resource
         :return:
         """
         try:
