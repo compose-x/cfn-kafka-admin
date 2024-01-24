@@ -35,6 +35,7 @@ def create_new_kafka_topic(
     cluster_info: dict,
     replication_factor: int = 1,
     topic_config: dict = None,
+    convert: bool = True,
 ) -> str:
     """
     Function to create new Kafka topic
@@ -52,7 +53,9 @@ def create_new_kafka_topic(
             topic_name, partitions, replication_factor, topic_config
         )
     )
-    admin_client = get_admin_client(cluster_info, "CREATE", topic_name)
+    admin_client = get_admin_client(
+        cluster_info, "CREATE", topic_name, convert_props=convert
+    )
 
     if topic_config:
         new_topic = NewTopic(

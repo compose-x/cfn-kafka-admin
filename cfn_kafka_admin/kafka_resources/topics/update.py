@@ -51,7 +51,11 @@ def update_topic_partitions(admin_client, topic_name: str, partitions: int) -> i
 
 
 def update_kafka_topic(
-    topic_name: str, partitions: int, cluster_info: dict, settings: dict
+    topic_name: str,
+    partitions: int,
+    cluster_info: dict,
+    settings: dict,
+    convert: bool = False,
 ):
     """
     Function to update existing Kafka topic
@@ -63,7 +67,7 @@ def update_kafka_topic(
     :return:
     """
     topic_config_resource = ConfigResource(ResourceType.TOPIC, topic_name)
-    admin_client = get_admin_client(cluster_info, "UPDATE", topic_name)
+    admin_client = get_admin_client(cluster_info, "UPDATE", topic_name, convert)
     topic_configs = describe_topic_configs(admin_client, topic_name, result_only=True)
     incremental_configs: list = []
     for config_name, config_value in topic_configs.items():

@@ -116,9 +116,9 @@ class KafkaTopic(ResourceProvider):
         Method to create a new Kafka topic
         :return:
         """
+        client_config = self.get("ClientConfig", {})
         try:
             LOG.info(f"Attempting to create new topic {self.get('Name')}")
-            client_config = self.get("ClientConfig", {})
             if not client_config:
                 self.define_cluster_info()
                 self.interpolate_secret_vars(self.cluster_info)
@@ -143,6 +143,7 @@ class KafkaTopic(ResourceProvider):
                 self.cluster_info,
                 replication_factor=self.get("ReplicationFactor"),
                 topic_config=self.get("Settings"),
+                convert=False if client_config else False,
             )
             self.physical_resource_id = topic_name
             self.set_attribute("Name", self.get("Name"))
@@ -163,18 +164,20 @@ class KafkaTopic(ResourceProvider):
         """
         :return:
         """
+        client_config = self.get("ClientConfig", {})
         try:
-            client_config = self.get("ClientConfig", {})
             if not client_config:
                 self.define_cluster_info()
+                self.interpolate_secret_vars(self.cluster_info)
             else:
+                self.interpolate_secret_vars(client_config)
                 self.cluster_info = client_config
-            self.interpolate_secret_vars()
             update_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
                 self.cluster_info,
                 settings=self.get("Settings"),
+                convert=False if client_config else False,
             )
             self.physical_resource_id = self.get("Name")
             self.set_attribute("Name", self.get("Name"))
@@ -207,10 +210,16 @@ class KafkaTopic(ResourceProvider):
             client_config = self.get("ClientConfig", {})
             if not client_config:
                 self.define_cluster_info()
+                self.interpolate_secret_vars(self.cluster_info)
             else:
+                self.interpolate_secret_vars(client_config)
                 self.cluster_info = client_config
-            self.interpolate_secret_vars()
-            delete_topic(self.get("Name"), self.cluster_info)
+            self.interpolate_secret_vars(self.cluster_info)
+            delete_topic(
+                self.get("Name"),
+                self.cluster_info,
+                convert=False if client_config else False,
+            )
             self.success(
                 f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."
             )

@@ -29,14 +29,9 @@ from cfn_kafka_admin.kafka_resources.topics import (
     jitter=RETRY_JITTER,
     logger=LOG,
 )
-def delete_topic(topic_name: str, cluster_info: dict):
-    """
-    Function to delete kafka topic
-
-    :param topic_name: name of the topic to delete
-    :param cluster_info: cluster information
-    """
-    admin_client = get_admin_client(cluster_info, "DELETE", topic_name)
+def delete_topic(topic_name: str, cluster_info: dict, convert: bool = True):
+    """Function to delete kafka topic"""
+    admin_client = get_admin_client(cluster_info, "DELETE", topic_name, convert)
     try:
         configs = describe_topic_configs(admin_client, topic_name, result_only=True)
         LOG.info(f"Deleting topic: {topic_name}")
