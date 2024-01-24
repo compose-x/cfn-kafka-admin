@@ -7,7 +7,7 @@
   "typeName": "config",
   "properties": {
     "Globals": {
-      "$ref": "ews-kafka-parameters.json"
+      "$ref": "ews-kafka-parameters.json#/"
     },
     "Topics": {
       "type": "object",
@@ -15,7 +15,7 @@
         "Topics": {
           "type": "array",
           "items": {
-            "$ref": "ews-kafka-topic.json"
+            "$ref": "ews-kafka-topic.json#/"
           }
         },
         "ReplicationFactor": {
@@ -104,10 +104,10 @@
   },
   "definitions": {
     "SchemasDef": {
-      "$ref": "ews-kafka-schema.json"
+      "$ref": "ews-kafka-schema.json#/"
     },
     "AclsModel": {
-      "$ref": "ews-kafka-acl.json"
+      "$ref": "ews-kafka-acl.json#/"
     }
   }
 }

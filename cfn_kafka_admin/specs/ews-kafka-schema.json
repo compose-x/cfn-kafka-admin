@@ -2,7 +2,8 @@
   "typeName": "EWS::Kafka::Schema",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Resource to create Kafka topics in your cluster.",
-  "sourceUrl": "https://github.com/compose-x/cfn_kafka_admin",
+  "sourceUrl": "https://github.com/compose-x/cfn-kafka-admin",
+  "type": "object",
   "properties": {
     "RegistryUrl": {
       "$ref": "ews-kafka-parameters.json#/definitions/RegistryUrl"

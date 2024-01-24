@@ -56,8 +56,14 @@ testcontainers = "^3.7.1"
 input = "cfn_kafka_admin/specs/aws-cfn-kafka-admin-provider-schema.json"
 input-file-type = "jsonschema"
 output = "cfn_kafka_admin/models/admin.py"
+#output-model-type = "dataclasses.dataclass"
 reuse-model = "true"
-target-python-version = "3.9"
+target-python-version = "3.10"
+use-schema-description = "true"
+use-field-description = "true"
+use-double-quotes = "true"
+disable-timestamp = "true"
+
 
 [tool.tbump]
 github_url = "https://github.com/compose-x/cfn-kafka-admin"

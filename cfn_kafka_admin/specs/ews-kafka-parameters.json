@@ -2,7 +2,7 @@
   "typeName": "EWS::Kafka::Parameters",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Generic properties used to connect to Kafka cluster.",
-  "sourceUrl": "https://github.com/ews-network/aws_cfn_kafka_definitions",
+  "sourceUrl": "https://github.com/compose-x/cfn-kafka-admin",
   "properties": {
     "BootstrapServers": {
       "$ref": "#/definitions/BootstrapServers"
@@ -30,6 +30,10 @@
     },
     "CompatibilityMode": {
       "$ref": "ews-kafka-schema.json#/definitions/CompatibilityMode"
+    },
+    "ClientConfig": {
+      "description": "Client configuration as per the librdkafka settings. Incompatible with the SASL & SecurityProtocol properties",
+      "type": "object"
     }
   },
   "definitions": {

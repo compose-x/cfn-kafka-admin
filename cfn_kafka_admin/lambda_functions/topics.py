@@ -91,10 +91,17 @@ class KafkaTopic(ResourceProvider):
             ):
                 self.properties[prop] = self.properties[prop].lower() == "true"
 
+    def interpolate_secret_vars(self, config_input: dict) -> None:
+        for key, value in config_input.items():
+            if isinstance(value, str) and value.find("resolve:secretsmanager") >= 0:
+                try:
+                    config_input[key] = handle(value)
+                except Exception as error:
+                    LOG.error("Failed to import secrets from SecretsManager")
+                    self.fail(str(error))
+
     def define_cluster_info(self):
-        """
-        Method to define the cluster information into a simple format
-        """
+        """Method to define the cluster information into a simple format"""
         try:
             self.cluster_info["bootstrap_servers"] = self.get("BootstrapServers")
             self.cluster_info["security_protocol"] = self.get("SecurityProtocol")
@@ -104,14 +111,6 @@ class KafkaTopic(ResourceProvider):
         except Exception as error:
             self.fail(f"Failed to get cluster information - {str(error)}")
 
-        for key, value in self.cluster_info.items():
-            if isinstance(value, str) and value.find("resolve:secretsmanager") >= 0:
-                try:
-                    self.cluster_info[key] = handle(value)
-                except Exception as error:
-                    LOG.error("Failed to import secrets from SecretsManager")
-                    self.fail(str(error))
-
     def create(self):
         """
         Method to create a new Kafka topic
@@ -119,7 +118,13 @@ class KafkaTopic(ResourceProvider):
         """
         try:
             LOG.info(f"Attempting to create new topic {self.get('Name')}")
-            self.define_cluster_info()
+            client_config = self.get("ClientConfig", {})
+            if not client_config:
+                self.define_cluster_info()
+                self.interpolate_secret_vars(self.cluster_info)
+            else:
+                self.interpolate_secret_vars(client_config)
+                self.cluster_info = client_config
             cluster_url = (
                 self.cluster_info["bootstrap.servers"]
                 if self.get("IsConfluentKafka")
@@ -159,7 +164,12 @@ class KafkaTopic(ResourceProvider):
         :return:
         """
         try:
-            self.define_cluster_info()
+            client_config = self.get("ClientConfig", {})
+            if not client_config:
+                self.define_cluster_info()
+            else:
+                self.cluster_info = client_config
+            self.interpolate_secret_vars()
             update_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
@@ -194,7 +204,12 @@ class KafkaTopic(ResourceProvider):
             self.success("Deleting non-working resource")
             return
         try:
-            self.define_cluster_info()
+            client_config = self.get("ClientConfig", {})
+            if not client_config:
+                self.define_cluster_info()
+            else:
+                self.cluster_info = client_config
+            self.interpolate_secret_vars()
             delete_topic(self.get("Name"), self.cluster_info)
             self.success(
                 f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."

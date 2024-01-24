@@ -2,7 +2,8 @@
   "typeName": "EWS::Kafka::Topic",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Resource to create Kafka topics in your cluster.",
-  "sourceUrl": "https://github.com/ews-network/cfn-kafka-acl-resource-provider",
+  "sourceUrl": "https://github.com/compose-x/cfn-kafka-admin",
+  "type": "object",
   "required": [
     "Name",
     "PartitionsCount"
@@ -37,6 +38,10 @@
     },
     "Settings": {
       "$ref": "#/definitions/TopicsSettings"
+    },
+    "ClientConfig": {
+      "description": "Client configuration as per the librdkafka settings.",
+      "type": "object"
     }
   },
   "definitions": {

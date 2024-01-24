@@ -2,7 +2,7 @@
   "typeName": "EWS::Kafka::ACL",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Resource to create Kafka topics in your cluster.",
-  "sourceUrl": "https://github.com/ews-network/cfn-kafka-topic-resource-provider",
+  "sourceUrl": "https://github.com/compose-x/cfn-kafka-admin",
   "properties": {
     "Policies": {
       "type": "array",
