@@ -36,7 +36,8 @@ def get_admin_client(
     """Creates a new Admin client, confluent first if import worked"""
     client_id: str = f"LAMBDA_{operation}_{topic_dest}"
     timeout_ms_env = int(os.environ.get("ADMIN_REQUEST_TIMEOUT_MS", 60000))
-    settings.update({"client_id": client_id})
+    if "client.id" not in settings:
+        settings.update({"client_id": client_id})
     if convert_props:
         cluster_info = convert_kafka_python_to_confluent_kafka(settings)
     # cluster_info.update({"debug": "broker,admin"})
