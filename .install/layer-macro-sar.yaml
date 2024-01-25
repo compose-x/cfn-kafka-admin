@@ -18,8 +18,17 @@ Metadata:
         Label:
           default: IAM Settings
 
-
 Parameters:
+  SchemasTemplatesBucketName:
+    Type: String
+    Description: Name of the S3 bucket you might upload your Schemas too to workaround large files
+    Default: none
+
+  SchemasTemplatesBucketKeyArn:
+    Type: String
+    Description: ARN of the KMS key to store files in S3
+    Default: none
+
   PermissionsBoundary:
     Type: String
     Default: none
@@ -64,6 +73,8 @@ Conditions:
   OverrideLayerVersion: !Not [!Equals [!Ref LambdaLayerVersionArn, "none"]]
   OverrideFunctionName: !Not [!Equals [!Ref FunctionsPrefix, "none"]]
   DebugKafka: !Not [!Equals [!Ref FunctionsPrefix, "no"]]
+  GrantKmsAccess: !Not [!Equals [!Ref SchemasTemplatesBucketKeyArn, "none"]]
+  GrantS3Access: !Not [!Equals [!Ref SchemasTemplatesBucketName, "none"]]
 
 
 Resources:
@@ -253,6 +264,34 @@ Resources:
         - PermissionsBoundaryCon
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+
+  s3AccessPolicy:
+    Type: AWS::IAM::Policy
+    Condition: GrantS3Access
+    Properties:
+      Roles:
+        - Ref: kafkaSchemasFunctionRole
+      PolicyName: s3access
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: S3Access
+            Effect: Allow
+            Resource:
+              - Fn::Sub: "arn:aws:s3:::${SchemasTemplatesBucketName}/*"
+            Action:
+              - s3:GetObject
+          - Fn::If:
+              - GrantKmsAccess
+              - Sid: KmsAcces
+                Effect: Allow
+                Resource:
+                  - Ref: SchemasTemplatesBucketKeyArn
+                Action:
+                  - kms:Decrypt
+                  - kms:DescribeKey
+              - Ref: AWS::NoValue
+
 
   kafkaSchemasFunction:
     Type: AWS::Serverless::Function
