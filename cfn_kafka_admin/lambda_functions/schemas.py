@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 """Module to handle the custom resource for Schemas"""
 

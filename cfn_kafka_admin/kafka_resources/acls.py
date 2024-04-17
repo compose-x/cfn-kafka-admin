@@ -1,21 +1,39 @@
-# SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 """
 Module to handle Kafka topics management.
 """
+from __future__ import annotations
 
-from kafka.admin import (
-    ACL,
-    ACLFilter,
-    ACLOperation,
-    ACLPermissionType,
-    ACLResourcePatternType,
-    KafkaAdminClient,
-    ResourcePattern,
-    ResourcePatternFilter,
-    ResourceType,
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from confluent_kafka.admin import AdminClient
+    from concurrent.futures import Future
+
+from confluent_kafka.admin import (
+    AclBinding,
+    AclBindingFilter,
+    AclOperation,
+    AclPermissionType,
 )
+
+from cfn_kafka_admin.kafka_resources import get_admin_client
+
+
+def get_acls_admin_client(
+    acls: list[dict], operation: str, cluster_info: dict
+) -> AdminClient:
+    if acls:
+        resource_name: str = (
+            f'{acls[0]["Principal"]}_{acls[0]["Resource"]}_{acls[0]["Action"]}'
+        )
+    else:
+        resource_name = "unspecified"
+    admin_client: AdminClient = get_admin_client(
+        cluster_info, "ACLs", operation, resource_name
+    )
+    return admin_client
 
 
 def differentiate_old_new_acls(new_policies, old_policies):
@@ -51,6 +69,32 @@ def differentiate_old_new_acls(new_policies, old_policies):
     return final_new_acls, final_delete_acls
 
 
+def set_binding_from_dict(policy: dict) -> AclBinding:
+    new_acl: AclBinding = AclBinding(
+        restype=policy["ResourceType"],
+        name=policy["Resource"],
+        principal=policy["Principal"],
+        host=policy["Host"] if "Host" in policy else "*",
+        operation=AclOperation[policy["Action"]],
+        permission_type=AclPermissionType[policy["Effect"]],
+        resource_pattern_type=policy["PatternType"],
+    )
+    return new_acl
+
+
+def set_binding_filter_from_dict(policy: dict) -> AclBindingFilter:
+    acl_filter: AclBindingFilter = AclBindingFilter(
+        restype=policy["ResourceType"],
+        name=policy["Resource"],
+        principal=policy["Principal"],
+        host=policy["Host"] if "Host" in policy else "*",
+        operation=AclOperation[policy["Action"]],
+        permission_type=AclPermissionType[policy["Effect"]],
+        resource_pattern_type=policy["PatternType"],
+    )
+    return acl_filter
+
+
 def create_new_acls(acls, cluster_info):
     """
     Function to iterate over the given ACL policies and apply them
@@ -59,45 +103,27 @@ def create_new_acls(acls, cluster_info):
     :param cluster_info:
     :return:
     """
-    admin_client = KafkaAdminClient(**cluster_info)
+    admin_client: AdminClient = get_acls_admin_client(acls, "CREATE", cluster_info)
     kafka_acls = []
     for policy in acls:
         if isinstance(policy, dict):
-            new_acl = ACL(
-                principal=policy["Principal"],
-                host=policy["Host"],
-                operation=ACLOperation[policy["Action"]],
-                permission_type=ACLPermissionType[policy["Effect"]],
-                resource_pattern=ResourcePattern(
-                    resource_type=ResourceType[policy["ResourceType"]],
-                    resource_name=policy["Resource"],
-                    pattern_type=ACLResourcePatternType[policy["PatternType"]],
-                ),
-            )
+            new_acl: AclBinding = set_binding_from_dict(policy)
             kafka_acls.append(new_acl)
-    admin_client.create_acls(kafka_acls)
+    return_vals = admin_client.create_acls(kafka_acls)
+    for acl_binding, _future in return_vals.items():
+        if _future.exception():
+            raise _future.exception()
 
 
-def delete_acls(acls, cluster_info):
-    """
-    Function to delete the ACLs.
-    :param acls:
-    :param cluster_info:
-    :return:
-    """
-    admin_client = KafkaAdminClient(**cluster_info)
+def delete_acls(acls: list[dict], cluster_info: dict) -> dict[AclBindingFilter, Future]:
+    """Function to delete the ACLs."""
+    admin_client: AdminClient = get_acls_admin_client(acls, "DELETE", cluster_info)
     policies = []
     for policy in acls:
-        new_filter = ACLFilter(
-            principal=policy["Principal"],
-            host=policy["Host"] if "Host" in policy else "*",
-            operation=ACLOperation[policy["Action"]],
-            permission_type=ACLPermissionType[policy["Effect"]],
-            resource_pattern=ResourcePatternFilter(
-                resource_type=ResourceType[policy["ResourceType"]],
-                resource_name=policy["Resource"],
-                pattern_type=ACLResourcePatternType[policy["PatternType"]],
-            ),
-        )
+        new_filter = set_binding_filter_from_dict(policy)
         policies.append(new_filter)
-    admin_client.delete_acls(policies)
+    deleted: dict[AclBindingFilter, Future] = admin_client.delete_acls(policies)
+    for _filter, _future in deleted.items():
+        while not _future.done():
+            pass
+    return deleted

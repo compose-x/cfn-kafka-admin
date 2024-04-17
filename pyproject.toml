@@ -7,8 +7,6 @@ classifiers = [
   "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
   "Natural Language :: English",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
 ]
@@ -21,16 +19,15 @@ license = "MPL-2.0"
 "Bug Tracker" = "https://github.com/compose-x/cfn-kafka-admin/issues"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 compose-x-common = "^1.4"
-jsonschema = "4.17.3"
+jsonschema = "^4.21"
 importlib-resources = "^6.0"
 PyYAML = "^6.0"
 troposphere = "^4.5.1"
-kafka-schema-registry-admin = "^0.4"
+kafka-schema-registry-admin = "^0.5"
 datamodel-code-generator = { extras = ["http"], version = "^0.25" }
 aws-cfn-custom-resource-resolve-parser = "^0.3"
-kafka-python = "^2.0.2"
 cfn-resource-provider = "^1.0.7"
 retry2 = "^0.9.5"
 confluent-kafka = "^2.3"
@@ -50,7 +47,7 @@ Sphinx = "^4.5.0"
 sphinx-material = "^0.0.35"
 sphinx-jsonschema = "^1.19.1"
 pyupgrade = "^3.3.1"
-testcontainers = "^3.7.1"
+testcontainers = "^4.0"
 
 [tool.datamodel-codegen]
 input = "cfn_kafka_admin/specs/aws-cfn-kafka-admin-provider-schema.json"

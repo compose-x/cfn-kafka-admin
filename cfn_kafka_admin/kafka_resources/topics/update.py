@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 from __future__ import annotations
 
@@ -55,7 +55,6 @@ def update_kafka_topic(
     partitions: int,
     cluster_info: dict,
     settings: dict,
-    convert: bool = False,
 ):
     """
     Function to update existing Kafka topic
@@ -67,7 +66,7 @@ def update_kafka_topic(
     :return:
     """
     topic_config_resource = ConfigResource(ResourceType.TOPIC, topic_name)
-    admin_client = get_admin_client(cluster_info, "UPDATE", topic_name, convert)
+    admin_client = get_admin_client(cluster_info, "UPDATE", topic_name)
     topic_configs = describe_topic_configs(admin_client, topic_name, result_only=True)
     incremental_configs: list = []
     for config_name, config_value in topic_configs.items():
