@@ -3,15 +3,10 @@ import os
 
 import pytest
 from confluent_kafka.admin import AdminClient as ConfluentAdminClient
-from confluent_kafka.admin import ConfigResource
-from confluent_kafka.admin._resource import ResourceType
 from kafka import errors
 from testcontainers.kafka import KafkaContainer
 
-from cfn_kafka_admin.kafka_resources import (
-    convert_kafka_python_to_confluent_kafka,
-    get_admin_client,
-)
+from cfn_kafka_admin.kafka_resources import get_admin_client
 from cfn_kafka_admin.kafka_resources.topics.create import create_new_kafka_topic
 from cfn_kafka_admin.kafka_resources.topics.delete import delete_topic
 from cfn_kafka_admin.kafka_resources.topics.update import update_kafka_topic

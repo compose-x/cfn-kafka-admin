@@ -27,7 +27,7 @@ jsonschema = "4.17.3"
 importlib-resources = "^6.0"
 PyYAML = "^6.0"
 troposphere = "^4.5.1"
-kafka-schema-registry-admin = "^0.2"
+kafka-schema-registry-admin = "^0.4"
 datamodel-code-generator = { extras = ["http"], version = "^0.25" }
 aws-cfn-custom-resource-resolve-parser = "^0.3"
 kafka-python = "^2.0.2"

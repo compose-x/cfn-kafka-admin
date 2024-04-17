@@ -93,11 +93,8 @@ class KafkaSchema(ResourceProvider):
         registry_url = self.try_replace_from_secret("RegistryUrl")
         LOG.info(registry_url)
         registry = SchemaRegistry(
-            **{
-                "SchemaRegistryUrl": registry_url,
-                "Username": username,
-                "Password": password,
-            }
+            registry_url,
+            **{"basic_auth.username": username, "basic_auth.password": password},
         )
         return registry
 
@@ -111,13 +108,13 @@ class KafkaSchema(ResourceProvider):
             serializer = self.get("Serializer")
             compatibility = self.get("CompatibilityMode")
             schema_def = import_definition(self.get("Definition"))
-            schema = registry.post_subject_version(
+            schema = registry.post_subject_schema_version(
                 subject, schema_def, schema_type=serializer
             )
             registry.put_compatibility_subject_config(
                 subject_name=subject, compatibility=compatibility
             )
-            self.set_attribute("Id", schema["id"])
+            self.set_attribute("Id", schema.json()["id"])
             self.physical_resource_id = subject
             self.success("Schema version created")
         except Exception as error:
@@ -138,16 +135,18 @@ class KafkaSchema(ResourceProvider):
                 subject_name=subject,
                 version_id="latest",
                 definition=schema_def,
-                definition_type=serializer,
-                as_bool=True,
-            )
+                schema_type=serializer,
+            ).json()["is_compatible"]
             if not compatible:
                 print(schema_def)
                 self.fail(
                     f"Schema for {subject} is not compatible with the latest version"
                 )
-            schema = registry.post_subject_version(subject, schema_def)
-            self.set_attribute("Id", schema["id"])
+                return
+            schema = registry.post_subject_schema_version(
+                subject, schema_def, schema_type=serializer
+            )
+            self.set_attribute("Id", schema.json()["id"])
             self.success("New schema version created")
         except Exception as error:
             LOG.exception(error)
