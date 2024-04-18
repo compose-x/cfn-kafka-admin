@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ from os import environ
 from confluent_kafka import KafkaError, KafkaException
 from confluent_kafka.admin import ConfigResource, ResourceType
 from confluent_kafka.cimpl import NewTopic
-from kafka import errors
 from retry import retry
 
 from cfn_kafka_admin.kafka_resources import get_admin_client
@@ -21,10 +20,7 @@ from cfn_kafka_admin.kafka_resources.topics import (
 
 
 @retry(
-    (
-        errors.KafkaError,
-        KafkaException,
-    ),
+    (KafkaException,),
     tries=RETRY_ATTEMPTS,
     jitter=RETRY_JITTER,
     logger=LOG,
@@ -68,10 +64,8 @@ def create_new_kafka_topic(
             if environ.get("FAIL_IF_ALREADY_EXISTS", None) is None:
                 return topic_name
             else:
-                raise errors.TopicAlreadyExistsError(
-                    f"Topic {topic_name} already exists"
-                )
-        raise errors.KafkaConnectionError(f"Failed to create topic {topic_name}")
+                raise create_error
+        raise create_error
     topic_config_resource = ConfigResource(ResourceType.TOPIC, topic_name)
     created_topic_config = validate_topic_created(admin_client, topic_config_resource)
     LOG.debug(created_topic_config)
@@ -79,10 +73,7 @@ def create_new_kafka_topic(
 
 
 @retry(
-    (
-        errors.KafkaError,
-        KafkaError,
-    ),
+    (KafkaError,),
     tries=RETRY_ATTEMPTS,
     jitter=RETRY_JITTER,
     logger=LOG,

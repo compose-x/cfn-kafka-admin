@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 """Main module."""
 
@@ -12,13 +12,15 @@ from aws_cfn_custom_resource_resolve_parser import handle
 from cfn_resource_provider import ResourceProvider
 from cfn_resource_provider.resource_provider import is_int
 from compose_x_common.compose_x_common import keypresent
-from kafka import errors
+from confluent_kafka import KafkaError, KafkaException
 
 from cfn_kafka_admin.common import setup_logging
 from cfn_kafka_admin.kafka_resources.topics.create import create_new_kafka_topic
 from cfn_kafka_admin.kafka_resources.topics.delete import delete_topic
 from cfn_kafka_admin.kafka_resources.topics.update import update_kafka_topic
 from cfn_kafka_admin.models.admin import EwsKafkaTopic
+
+from .utils import cfn_resolve_string, define_cluster_info, set_client_info
 
 LOG = setup_logging(__name__)
 
@@ -74,7 +76,6 @@ class KafkaTopic(ResourceProvider):
     def convert_property_types(self):
         self.heuristic_convert_property_types(self.properties)
         int_props = ["PartitionsCount", "ReplicationFactor"]
-        boolean_props = ["IsConfluentKafka"]
         for prop in int_props:
             if keypresent(prop, self.properties) and isinstance(
                 self.properties[prop], str
@@ -85,49 +86,33 @@ class KafkaTopic(ResourceProvider):
                     self.fail(
                         f"Failed to get cluster information - {prop} - {str(error)}"
                     )
-        for prop in boolean_props:
-            if keypresent(prop, self.properties) and isinstance(
-                self.properties[prop], str
-            ):
-                self.properties[prop] = self.properties[prop].lower() == "true"
 
-    def define_cluster_info(self):
-        """
-        Method to define the cluster information into a simple format
-        """
-        try:
-            self.cluster_info["bootstrap_servers"] = self.get("BootstrapServers")
-            self.cluster_info["security_protocol"] = self.get("SecurityProtocol")
-            self.cluster_info["sasl_mechanism"] = self.get("SASLMechanism")
-            self.cluster_info["sasl_plain_username"] = self.get("SASLUsername")
-            self.cluster_info["sasl_plain_password"] = self.get("SASLPassword")
-        except Exception as error:
-            self.fail(f"Failed to get cluster information - {str(error)}")
-
-        for key, value in self.cluster_info.items():
+    def interpolate_secret_vars(self, config_input: dict) -> None:
+        for key, value in config_input.items():
             if isinstance(value, str) and value.find("resolve:secretsmanager") >= 0:
                 try:
-                    self.cluster_info[key] = handle(value)
+                    config_input[key] = handle(value)
                 except Exception as error:
                     LOG.error("Failed to import secrets from SecretsManager")
                     self.fail(str(error))
+
+    def define_cluster_info(self):
+        """Method to define the cluster information into a simple format"""
+        try:
+            self.cluster_info["bootstrap_servers"] = self.get("BootstrapServers")
+            self.cluster_info["security.protocol"] = self.get("SecurityProtocol")
+            self.cluster_info["sasl.mechanism"] = self.get("SASLMechanism")
+            self.cluster_info["sasl.username"] = self.get("SASLUsername")
+            self.cluster_info["sasl.password"] = self.get("SASLPassword")
+        except Exception as error:
+            self.fail(f"Failed to get cluster information - {str(error)}")
 
     def create(self):
         """
         Method to create a new Kafka topic
         :return:
         """
-        try:
-            LOG.info(f"Attempting to create new topic {self.get('Name')}")
-            self.define_cluster_info()
-            cluster_url = (
-                self.cluster_info["bootstrap.servers"]
-                if self.get("IsConfluentKafka")
-                else self.cluster_info["bootstrap_servers"]
-            )
-            LOG.info(f"Cluster is {cluster_url}")
-        except Exception as error:
-            self.fail(f"Failed to initialize - {str(error)}")
+        set_client_info(self)
         if not self.get("PartitionsCount") >= 1:
             self.fail("The number of partitions must be a strictly positive value >= 1")
         try:
@@ -144,7 +129,7 @@ class KafkaTopic(ResourceProvider):
             self.set_attribute("Partitions", self.get("PartitionsCount"))
             self.set_attribute("BootstrapServers", self.get("BootstrapServers"))
             self.success(f"Created new topic {topic_name}")
-        except errors.TopicAlreadyExistsError as error:
+        except KafkaException as error:
             self.physical_resource_id = "could-not-create-nor-import"
             self.fail(
                 f"{self.get('Name')} - Topic already exists and import is disabled, {str(error)}"
@@ -158,8 +143,8 @@ class KafkaTopic(ResourceProvider):
         """
         :return:
         """
+        set_client_info(self)
         try:
-            self.define_cluster_info()
             update_kafka_topic(
                 self.get("Name"),
                 self.get("PartitionsCount"),
@@ -181,7 +166,7 @@ class KafkaTopic(ResourceProvider):
         Method to delete the Topic resource
         :return:
         """
-        LOG.info("Delet: topic attribute name: {}".format(self.get("Name")))
+        LOG.info("Delete: topic attribute name: {}".format(self.get("Name")))
         LOG.info(f"DELETE: {self.stack_id} - {self.physical_resource_id}")
         if self.get("Name") and self.get("Name") != self.physical_resource_id:
             self.success("Name does not match physical ID. Skipping.")
@@ -193,9 +178,12 @@ class KafkaTopic(ResourceProvider):
             LOG.warning("Deleting failed create resource.")
             self.success("Deleting non-working resource")
             return
+        set_client_info(self)
         try:
-            self.define_cluster_info()
-            delete_topic(self.get("Name"), self.cluster_info)
+            delete_topic(
+                self.get("Name"),
+                self.cluster_info,
+            )
             self.success(
                 f"Topic {self.get_attribute('Name')} does not exist. Nothing to delete."
             )

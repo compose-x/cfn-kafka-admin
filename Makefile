@@ -94,14 +94,14 @@ python38	: clean
 			test -d layer && rm -rf layer || mkdir layer
 			docker run -u $(shell bash -c 'id -u'):$(shell bash -c 'id -u') \
 			--rm -v $(PWD):/app --entrypoint /bin/bash \
-			public.ecr.aws/compose-x/python:3.8 \
+			public.ecr.aws/lambda/python:3.8 \
 			-c "pip install --no-cache-dir /app/dist/*.whl -t /app/layer"
 
-python37	: clean
+python310	: clean dist
 			test -d layer && rm -rf layer || mkdir layer
 			docker run -u $(shell bash -c 'id -u'):$(shell bash -c 'id -u') \
 			--rm -v $(PWD):/app --entrypoint /bin/bash \
-			public.ecr.aws/compose-x/python:3.7 \
+			public.ecr.aws/lambda/python:3.10 \
 			-c "pip install --no-cache-dir /app/dist/*.whl -t /app/layer"
 
 

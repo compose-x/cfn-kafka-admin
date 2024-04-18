@@ -250,21 +250,29 @@ class KafkaStack:
             {
                 "BootstrapServers": self.model.Globals.BootstrapServers.__root__,
                 "SASLUsername": self.model.Globals.SASLUsername.__root__
-                if self.model.Globals.SASLUsername.__root__
+                if self.model.Globals.SASLUsername
+                and self.model.Globals.SASLUsername.__root__
                 else Ref(AWS_NO_VALUE),
                 "SASLPassword": self.model.Globals.SASLPassword.__root__
-                if self.model.Globals.SASLPassword.__root__
+                if self.model.Globals.SASLPassword
+                and self.model.Globals.SASLPassword.__root__
                 else Ref(AWS_NO_VALUE),
                 "SASLMechanism": SASLMechanism[
                     self.model.Globals.SASLMechanism.name
                 ].value
-                if isinstance(self.model.Globals.SASLMechanism, SASLMechanism)
+                if self.model.Globals.SASLMechanism
+                and isinstance(self.model.Globals.SASLMechanism, SASLMechanism)
                 else self.model.Globals.SASLMechanism,
                 "SecurityProtocol": SecurityProtocol[
                     self.model.Globals.SecurityProtocol.name
                 ].value
-                if isinstance(self.model.Globals.SecurityProtocol, SecurityProtocol)
+                if self.model.Globals.SecurityProtocol
+                and isinstance(self.model.Globals.SecurityProtocol, SecurityProtocol)
                 else self.model.Globals.SecurityProtocol,
+                "ClientConfig": self.model.Globals.ClientConfig
+                if self.model.Globals.ClientConfig
+                and isinstance(self.model.Globals.ClientConfig, dict)
+                else Ref(AWS_NO_VALUE),
             }
         )
 

@@ -1,0 +1,400 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to deploy the Lambda Functions for Kafka Admin Resources
+Transform:
+  - AWS::Serverless-2016-10-31
+Metadata:
+  Maintainer: john@compose-x.io
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Parameters:
+          - LambdaLayerVersionArn
+        Label:
+          default: Lambda Settings
+      - Parameters:
+          - PermissionsBoundary
+        Label:
+          default: IAM Settings
+Parameters:
+  LayerOnly:
+    Type: String
+    AllowedValues:
+      - 'yes'
+      - 'no'
+    Default: 'no'
+    Description: Whether you only want to deploy the layer. Optional.
+  SchemasTemplatesBucketName:
+    Type: String
+    Description: Name of the S3 bucket you might upload your Schemas too to workaround large files
+    Default: none
+  SchemasTemplatesBucketKeyArn:
+    Type: String
+    Description: ARN of the KMS key to store files in S3
+    Default: none
+  PermissionsBoundary:
+    Type: String
+    Default: none
+    Description: IAM Policy ARN to use for PermissionsBoundary if required. Optional.
+  LambdaLayerVersionArn:
+    Type: String
+    Description: Lambda Layer that contains the Kafka Admin Resources functions code.
+  KafkaSecretsArns:
+    Type: CommaDelimitedList
+  FunctionsPrefix:
+    Type: String
+    Default: none
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+  EnableKafkaDebug:
+    Type: String
+    AllowedValues:
+      - 'yes'
+      - 'no'
+    Default: 'no'
+  FunctionsTimeout:
+    Type: Number
+    Description: Timeout, in seconds, for the Lambda functions
+    Default: 75
+  KafkaClientTimeout:
+    Type: Number
+    Description: Timeout in milliseconds, for the lambda functions. Must me shorter than FunctionsTimeout *1000
+    Default: 60000
+Conditions:
+  PermissionsBoundaryCon:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: PermissionsBoundary
+          - none
+  OverrideFunctionName:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: FunctionsPrefix
+          - none
+  DebugKafka:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: FunctionsPrefix
+          - 'no'
+  GrantKmsAccess:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: SchemasTemplatesBucketKeyArn
+          - none
+  GrantS3Access:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: SchemasTemplatesBucketName
+          - none
+  LayerOnlyCon:
+    Fn::Equals:
+      - Ref: LayerOnly
+      - 'yes'
+  FunctionCon:
+    Fn::Not:
+      - Condition: LayerOnlyCon
+Resources:
+  kafkaAdminCredsAccess:
+    Condition: FunctionCon
+    Type: AWS::IAM::Policy
+    DependsOn:
+      - kafkaSchemasFunctionRole
+      - kafkaACLsFunctionRole
+      - kafkaTopicsFunctionRole
+    Properties:
+      Roles:
+        - Ref: kafkaSchemasFunctionRole
+        - Ref: kafkaACLsFunctionRole
+        - Ref: kafkaTopicsFunctionRole
+      PolicyName: AssumeRoleForEcsBasedScan
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AccessKafkaAdminSecret
+            Action:
+              - secretsmanager:GetSecret*
+            Effect: Allow
+            Resource:
+              Ref: KafkaSecretsArns
+  functionsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: FunctionCon
+    Properties:
+      GroupDescription:
+        Fn::Sub: cfn_kafka_admin Functions SG in ${AWS::StackName}
+      VpcId:
+        Ref: VpcId
+  kafkaTopicsFunctionRole:
+    Type: AWS::IAM::Role
+    Condition: FunctionCon
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Condition:
+              Bool:
+                aws:SecureTransport: 'true'
+            Effect: Allow
+            Principal:
+              Service:
+                - Fn::Sub: lambda.${AWS::URLSuffix}
+        Version: '2012-10-17'
+      Description:
+        Fn::Sub: kafkaTopicsFunctionRole-${AWS::StackName}
+      PermissionsBoundary:
+        Fn::If:
+          - PermissionsBoundaryCon
+          - Ref: PermissionsBoundary
+          - Ref: AWS::NoValue
+  kafkaTopicsFunction:
+    Type: AWS::Serverless::Function
+    Condition: FunctionCon
+    Properties:
+      Tags:
+        Name: cfn-kafka-admin-Schemas
+        Source: https://github.com/compose-x/cfn-kafka-admin
+      FunctionName:
+        Fn::If:
+          - OverrideFunctionName
+          - Fn::Sub: ${FunctionsPrefix}-Topics
+          - cfn-kafka-admin-Topics
+      Runtime: python3.10
+      Environment:
+        Variables:
+          DEBUG_KAFKA_CLIENT:
+            Fn::If:
+              - DebugKafka
+              - 'true'
+              - Ref: AWS::NoValue
+          ADMIN_REQUEST_TIMEOUT_MS:
+            Ref: KafkaClientTimeout
+      Handler: index.lambda_handler
+      Timeout:
+        Ref: FunctionsTimeout
+      Role:
+        Fn::GetAtt:
+          - kafkaTopicsFunctionRole
+          - Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - functionsSecurityGroup
+              - GroupId
+        SubnetIds:
+          Ref: Subnets
+      Layers:
+        Ref: LambdaLayerVersionArn
+      InlineCode: |
+        #!/usr/bin/env python
+        from cfn_kafka_admin.lambda_functions.topics import lambda_handler as handler
+
+
+        def lambda_handler(event, context):
+            """ Entry point function """
+            return handler(event, context)
+  kafkaACLsFunctionRole:
+    Condition: FunctionCon
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Condition:
+              Bool:
+                aws:SecureTransport: 'true'
+            Effect: Allow
+            Principal:
+              Service:
+                - Fn::Sub: lambda.${AWS::URLSuffix}
+        Version: '2012-10-17'
+      Description:
+        Fn::Sub: kafkaACLsFunctionRole-${AWS::StackName}
+      PermissionsBoundary:
+        Fn::If:
+          - PermissionsBoundaryCon
+          - Ref: PermissionsBoundary
+          - Ref: AWS::NoValue
+  kafkaACLsFunction:
+    Condition: FunctionCon
+    Type: AWS::Serverless::Function
+    Properties:
+      Tags:
+        Name: cfn-kafka-admin-Schemas
+        Source: https://github.com/compose-x/cfn-kafka-admin
+      FunctionName:
+        Fn::If:
+          - OverrideFunctionName
+          - Fn::Sub: ${FunctionsPrefix}-ACLs
+          - cfn-kafka-admin-ACLs
+      Runtime: python3.10
+      Environment:
+        Variables:
+          DEBUG_KAFKA_CLIENT:
+            Fn::If:
+              - DebugKafka
+              - 'true'
+              - Ref: AWS::NoValue
+          ADMIN_REQUEST_TIMEOUT_MS:
+            Ref: KafkaClientTimeout
+      Handler: index.lambda_handler
+      Timeout:
+        Ref: FunctionsTimeout
+      Role:
+        Fn::GetAtt:
+          - kafkaACLsFunctionRole
+          - Arn
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - functionsSecurityGroup
+              - GroupId
+        SubnetIds:
+          Ref: Subnets
+      Layers:
+        Ref: LambdaLayerVersionArn
+      InlineCode: |
+        #!/usr/bin/env python
+        from cfn_kafka_admin.lambda_functions.acls import lambda_handler as handler
+
+
+        def lambda_handler(event, context):
+            """ Entry point function """
+            return handler(event, context)
+  kafkaSchemasFunctionRole:
+    Condition: FunctionCon
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Condition:
+              Bool:
+                aws:SecureTransport: 'true'
+            Effect: Allow
+            Principal:
+              Service:
+                - Fn::Sub: lambda.${AWS::URLSuffix}
+        Version: '2012-10-17'
+      Description:
+        Fn::Sub: kafkaSchemasFunctionRole-${AWS::StackName}
+      PermissionsBoundary:
+        Fn::If:
+          - PermissionsBoundaryCon
+          - Ref: PermissionsBoundary
+          - Ref: AWS::NoValue
+  s3AccessPolicy:
+    Type: AWS::IAM::Policy
+    Condition: GrantS3Access
+    Properties:
+      Roles:
+        - Ref: kafkaSchemasFunctionRole
+      PolicyName: s3access
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: S3Access
+            Effect: Allow
+            Resource:
+              - Fn::Sub: arn:aws:s3:::${SchemasTemplatesBucketName}/*
+            Action:
+              - s3:GetObject
+          - Fn::If:
+              - GrantKmsAccess
+              - Sid: KmsAcces
+                Effect: Allow
+                Resource:
+                  - Ref: SchemasTemplatesBucketKeyArn
+                Action:
+                  - kms:Decrypt
+                  - kms:DescribeKey
+              - Ref: AWS::NoValue
+  kafkaSchemasFunction:
+    Condition: FunctionCon
+    Type: AWS::Serverless::Function
+    Properties:
+      Tags:
+        Name: cfn-kafka-admin-Schemas
+        Source: https://github.com/compose-x/cfn-kafka-admin
+      FunctionName:
+        Fn::If:
+          - OverrideFunctionName
+          - Fn::Sub: ${FunctionsPrefix}-Schemas
+          - cfn-kafka-admin-Schemas
+      Runtime: python3.10
+      Handler: index.lambda_handler
+      Role:
+        Fn::GetAtt:
+          - kafkaSchemasFunctionRole
+          - Arn
+      Timeout:
+        Ref: FunctionsTimeout
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::GetAtt:
+              - functionsSecurityGroup
+              - GroupId
+        SubnetIds:
+          Ref: Subnets
+      Layers:
+        Ref: LambdaLayerVersionArn
+      InlineCode: |
+        #!/usr/bin/env python
+        from cfn_kafka_admin.lambda_functions.schemas import lambda_handler as handler
+
+
+        def lambda_handler(event, context):
+            """ Entry point function """
+            return handler(event, context)
+
+Outputs:
+  TopicsFunctionArn:
+    Value:
+      Fn::If:
+        - FunctionCon
+        - Fn::GetAtt:
+            - kafkaTopicsFunction
+            - Arn
+        - none
+  TopicsFunctionName:
+    Value:
+      Fn::If:
+        - FunctionCon
+        - Ref: kafkaTopicsFunction
+        - none
+  SchemasFunctionArn:
+    Value:
+      Fn::If:
+        - FunctionCon
+        - Fn::GetAtt:
+            - kafkaSchemasFunction
+            - Arn
+        - none
+  SchemasFunctionName:
+    Value:
+      Fn::If:
+        - FunctionCon
+        - Ref: kafkaSchemasFunction
+        - none
+  ACLsFunctionArn:
+    Value:
+      Fn::If:
+        - FunctionCon
+        - Fn::GetAtt:
+            - kafkaACLsFunction
+            - Arn
+        - none
+  ACLsFunctionName:
+    Value:
+      Fn::If:
+        - FunctionCon
+        - Ref: kafkaACLsFunction
+        - none

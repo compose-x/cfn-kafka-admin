@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 """Main module."""
 
@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import uuid
 
-from aws_cfn_custom_resource_resolve_parser import handle
 from cfn_resource_provider import ResourceProvider
 from compose_x_common.compose_x_common import keyisset, keypresent
 
@@ -18,6 +17,8 @@ from cfn_kafka_admin.kafka_resources.acls import (
     differentiate_old_new_acls,
 )
 from cfn_kafka_admin.models.admin import EwsKafkaAcl
+
+from .utils import set_client_info
 
 LOG = setup_logging()
 
@@ -45,34 +46,13 @@ class KafkaACL(ResourceProvider):
             ):
                 self.properties[prop] = self.properties[prop].lower() == "true"
 
-    def define_cluster_info(self):
-        """
-        Method to define the cluster information into a simple format
-        """
-        try:
-            self.cluster_info["bootstrap_servers"] = self.get("BootstrapServers")
-            self.cluster_info["security_protocol"] = self.get("SecurityProtocol")
-            self.cluster_info["sasl_mechanism"] = self.get("SASLMechanism")
-            self.cluster_info["sasl_plain_username"] = self.get("SASLUsername")
-            self.cluster_info["sasl_plain_password"] = self.get("SASLPassword")
-        except Exception as error:
-            self.fail(f"Failed to get cluster information - {str(error)}")
-
-        for key, value in self.cluster_info.items():
-            if isinstance(value, str) and value.find("resolve:secretsmanager") >= 0:
-                try:
-                    self.cluster_info[key] = handle(value)
-                except Exception as error:
-                    LOG.error("Failed to import secrets from SecretsManager")
-                    self.fail(str(error))
-
     def create(self):
         """
         Method to create a new Kafka topic
         :return:
         """
+        set_client_info(self)
         try:
-            self.define_cluster_info()
             LOG.info(f"Connecting to {self.cluster_info['bootstrap_servers']}")
             LOG.info(f"Attempting to create new ACLs {self.get('Name')}")
             topic_name = create_new_acls(
@@ -90,10 +70,7 @@ class KafkaACL(ResourceProvider):
         """
         :return:
         """
-        try:
-            self.define_cluster_info()
-        except Exception as error:
-            self.fail(str(error))
+        set_client_info(self)
         old_policies = self.get_old("Policies")
         for policy in old_policies:
             if not keyisset("Host", policy):
@@ -126,8 +103,8 @@ class KafkaACL(ResourceProvider):
         Method to delete the ACLs resource
         :return:
         """
+        set_client_info(self)
         try:
-            self.define_cluster_info()
             delete_acls(self.get("Policies"), self.cluster_info)
             self.success("ACLs deleted")
         except Exception as error:

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2021 John Mille<john@ews-network.net>
+# Copyright 2021-2024 John Mille<john@ews-network.net>
 
 from __future__ import annotations
 
@@ -51,7 +51,10 @@ def update_topic_partitions(admin_client, topic_name: str, partitions: int) -> i
 
 
 def update_kafka_topic(
-    topic_name: str, partitions: int, cluster_info: dict, settings: dict
+    topic_name: str,
+    partitions: int,
+    cluster_info: dict,
+    settings: dict,
 ):
     """
     Function to update existing Kafka topic

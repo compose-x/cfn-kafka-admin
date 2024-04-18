@@ -37,6 +37,9 @@ phases:
       - poetry build
       - BUILD_WHL=`find . -name "cfn_kafka_admin*.whl" -type f`
       - echo $BUILD_WHL
+      - BUILD_CHECKSUM=`sha256sum $BUILD_WHL -b -t | cut -d ' ' -f 1`
+      - echo $BUILD_CHECKSUM
+      - if [ $USE_EPOCH -eq 1 ]; then SUFFIX=$BUILD_CHECKSUM; fi
       - PY_BUILD=python/lib/python${PY_VERSION}/site-packages/
       - mkdir -p ${PY_BUILD}
       - pip install $BUILD_WHL --no-cache-dir -t ${PY_BUILD}

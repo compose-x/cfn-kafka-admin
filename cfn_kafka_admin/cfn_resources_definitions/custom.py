@@ -1,4 +1,3 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
 # Copyright 2020-2021 John Mille <john@ews-network.net>
 
@@ -28,6 +27,7 @@ class KafkaTopic(CustomResource):
         "SASLPassword": (str, False),
         "Settings": (dict, False),
         "ServiceToken": (str, True),
+        "ClientConfig": (dict, False),
     }
 
 
@@ -47,6 +47,7 @@ class KafkaAcl(CustomResource):
         "SASLPassword": (str, False),
         "ServiceToken": (str, True),
         "Policies": ([KafkaAclPolicy], True),
+        "ClientConfig": (dict, False),
     }
 
 

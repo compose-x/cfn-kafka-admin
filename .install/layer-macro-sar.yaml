@@ -1,327 +1,53 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description:
-  Template to deploy the Lambda layer and functions for Kafka Admin Resources
-
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to deploy the Lambda layer and functions for Kafka Admin Resources
 Transform:
   - AWS::Serverless-2016-10-31
-
 Metadata:
   Maintainer: john@compose-x.io
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Parameters:
-          - LambdaLayerVersionArn
+          - LayerName
         Label:
-          default: Lambda Settings
-      - Parameters:
-          - PermissionsBoundary
-        Label:
-          default: IAM Settings
-
+          default: Lambda Layer Configuration
 
 Parameters:
-  PermissionsBoundary:
+  LayerName:
     Type: String
-    Default: none
-    Description: IAM Policy ARN to use for PermissionsBoundary if required. Optional.
-
-  LambdaLayerVersionArn:
+    Default: cfn-kafka-admin
+    Description: Name of the Lambda layer
+  PublishLayer:
     Type: String
-    Default: none
-    Description: Whether you want to use a different lambda layer for the Functions. Optional. Not recommended.
-
-  KafkaSecretsArns:
-    Type: CommaDelimitedList
-
-  FunctionsPrefix:
-    Type: String
-    Default: none
-
-  VpcId:
-    Type: AWS::EC2::VPC::Id
-
-  Subnets:
-    Type: List<AWS::EC2::Subnet::Id>
-
-  EnableKafkaDebug:
-    Type: String
+    Default: false
     AllowedValues:
-      - "yes"
-      - "no"
-    Default: "no"
-  FunctionsTimeout:
-    Type: Number
-    Description: Timeout, in seconds, for the Lambda functions
-    Default: 75
-
-  KafkaClientTimeout:
-    Type: Number
-    Description: Timeout in milliseconds, for the lambda functions. Must me shorter than FunctionsTimeout *1000
-    Default: 60000
-
+      - true
+      - false
+    Description: Publish the layer to public
 Conditions:
-  PermissionsBoundaryCon: !Not [!Equals [!Ref PermissionsBoundary, "none"]]
-  OverrideLayerVersion: !Not [!Equals [!Ref LambdaLayerVersionArn, "none"]]
-  OverrideFunctionName: !Not [!Equals [!Ref FunctionsPrefix, "none"]]
-  DebugKafka: !Not [!Equals [!Ref FunctionsPrefix, "no"]]
-
-
+  PublishLayerCon: !Equals [!Ref PublishLayer, "true"]
 Resources:
-  kafkaAdminCredsAccess:
-    Type: AWS::IAM::Policy
-    DependsOn:
-      - kafkaSchemasFunctionRole
-      - kafkaACLsFunctionRole
-      - kafkaTopicsFunctionRole
-    Properties:
-      Roles:
-        - !Ref kafkaSchemasFunctionRole
-        - !Ref kafkaACLsFunctionRole
-        - !Ref kafkaTopicsFunctionRole
-      PolicyName: AssumeRoleForEcsBasedScan
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: AccessKafkaAdminSecret
-            Action:
-              - "secretsmanager:GetSecret*"
-            Effect: Allow
-            Resource: !Ref KafkaSecretsArns
-
-  functionsSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Sub 'cfn_kafka_admin Functions SG in ${AWS::StackName}'
-      VpcId: !Ref VpcId
-
-  ###############################################
-  # Topics
-
-  kafkaTopicsFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Condition:
-              Bool:
-                aws:SecureTransport: 'true'
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub 'lambda.${AWS::URLSuffix}'
-        Version: '2012-10-17'
-      Description: !Sub 'kafkaTopicsFunctionRole-${AWS::StackName}'
-      PermissionsBoundary: !If
-        - PermissionsBoundaryCon
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-
-  kafkaTopicsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Tags:
-        Name: cfn-kafka-admin-Schemas
-        Source: https://github.com/compose-x/cfn-kafka-admin
-      FunctionName: !If
-        - OverrideFunctionName
-        - !Sub '${FunctionsPrefix}-Topics'
-        - cfn-kafka-admin-Topics
-      Runtime: python3.10
-      Environment:
-        Variables:
-          DEBUG_KAFKA_CLIENT: !If
-            - DebugKafka
-            - "true"
-            - !Ref AWS::NoValue
-          ADMIN_REQUEST_TIMEOUT_MS: !Ref KafkaClientTimeout
-
-      Handler: index.lambda_handler
-      Timeout: !Ref FunctionsTimeout
-      Role: !GetAtt kafkaTopicsFunctionRole.Arn
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt functionsSecurityGroup.GroupId
-        SubnetIds: !Ref Subnets
-      Layers:
-        - Fn::If:
-            - OverrideLayerVersion
-            - !Ref LambdaLayerVersionArn
-            - !Ref MacroLambdaLayer
-      InlineCode: |
-        #!/usr/bin/env python
-        from cfn_kafka_admin.lambda_functions.topics import lambda_handler as handler
-
-
-        def lambda_handler(event, context):
-            """ Entry point function """
-            return handler(event, context)
-
-  ###############################################
-  # ACLs
-
-  kafkaACLsFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Condition:
-              Bool:
-                aws:SecureTransport: 'true'
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub 'lambda.${AWS::URLSuffix}'
-        Version: '2012-10-17'
-      Description: !Sub 'kafkaACLsFunctionRole-${AWS::StackName}'
-      PermissionsBoundary: !If
-        - PermissionsBoundaryCon
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-
-  kafkaACLsFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Tags:
-        Name: cfn-kafka-admin-Schemas
-        Source: https://github.com/compose-x/cfn-kafka-admin
-      FunctionName: !If
-        - OverrideFunctionName
-        - !Sub '${FunctionsPrefix}-ACLs'
-        - cfn-kafka-admin-ACLs
-      Runtime: python3.10
-      Environment:
-        Variables:
-          DEBUG_KAFKA_CLIENT: !If
-            - DebugKafka
-            - "true"
-            - !Ref AWS::NoValue
-          ADMIN_REQUEST_TIMEOUT_MS: !Ref KafkaClientTimeout
-      Handler: index.lambda_handler
-      Timeout: !Ref FunctionsTimeout
-      Role: !GetAtt kafkaACLsFunctionRole.Arn
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt functionsSecurityGroup.GroupId
-        SubnetIds: !Ref Subnets
-      Layers:
-        - Fn::If:
-            - OverrideLayerVersion
-            - !Ref LambdaLayerVersionArn
-            - !Ref MacroLambdaLayer
-
-      InlineCode: |
-        #!/usr/bin/env python
-        from cfn_kafka_admin.lambda_functions.acls import lambda_handler as handler
-
-
-        def lambda_handler(event, context):
-            """ Entry point function """
-            return handler(event, context)
-
-  ###############################################
-  # Schemas
-
-  kafkaSchemasFunctionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-      AssumeRolePolicyDocument:
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Condition:
-              Bool:
-                aws:SecureTransport: 'true'
-            Effect: Allow
-            Principal:
-              Service:
-                - !Sub 'lambda.${AWS::URLSuffix}'
-        Version: '2012-10-17'
-      Description: !Sub 'kafkaSchemasFunctionRole-${AWS::StackName}'
-      PermissionsBoundary: !If
-        - PermissionsBoundaryCon
-        - !Ref PermissionsBoundary
-        - !Ref AWS::NoValue
-
-  kafkaSchemasFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      Tags:
-        Name: cfn-kafka-admin-Schemas
-        Source: https://github.com/compose-x/cfn-kafka-admin
-      FunctionName: !If
-        - OverrideFunctionName
-        - !Sub '${FunctionsPrefix}-Schemas'
-        - cfn-kafka-admin-Schemas
-      Runtime: python3.10
-      Handler: index.lambda_handler
-      Role: !GetAtt kafkaSchemasFunctionRole.Arn
-      Timeout: !Ref FunctionsTimeout
-      VpcConfig:
-        SecurityGroupIds:
-          - !GetAtt functionsSecurityGroup.GroupId
-        SubnetIds: !Ref Subnets
-      Layers:
-        - Fn::If:
-            - OverrideLayerVersion
-            - !Ref LambdaLayerVersionArn
-            - !Ref MacroLambdaLayer
-
-      InlineCode: |
-        #!/usr/bin/env python
-        from cfn_kafka_admin.lambda_functions.schemas import lambda_handler as handler
-
-
-        def lambda_handler(event, context):
-            """ Entry point function """
-            return handler(event, context)
-
-  ###############################################
-  # Layer
-
-  MacroLambdaLayer:
-    DependsOn:
-      - kafkaTopicsFunctionRole
-      - kafkaSchemasFunctionRole
-      - kafkaACLsFunctionRole
+  LambdaLayer:
     Type: AWS::Serverless::LayerVersion
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
     UpdateReplacePolicy: Retain
     Properties:
       CompatibleRuntimes:
         - python3.10
       ContentUri: ${S3_LAYER_UPLOAD_PATH}
       Description: Kafka resources library for AWS CFN
-      LayerName: cfn_kafka_admin
+      LayerName:
+        Ref: LayerName
       LicenseInfo: MPL-2.0
 
+  LambdaLayerPermission:
+    Condition: PublishLayerCon
+    Type: AWS::Lambda::LayerVersionPermission
+    Properties:
+      LayerVersionArn: !Ref LambdaLayer
+      Action: lambda:GetLayerVersion
+      Principal: "*"
 
 Outputs:
-  TopicsFunctionArn:
-    Value: !GetAtt kafkaTopicsFunction.Arn
-
-  TopicsFunctionName:
-    Value: !Ref kafkaTopicsFunction
-
-  SchemasFunctionArn:
-    Value: !GetAtt kafkaSchemasFunction.Arn
-
-  SchemasFunctionName:
-    Value: !Ref kafkaSchemasFunction
-
-  ACLsFunctionArn:
-    Value: !GetAtt kafkaACLsFunction.Arn
-
-  ACLsFunctionName:
-    Value: !Ref kafkaACLsFunction
+  LayerArn:
+    Value:
+      Ref: LambdaLayer
