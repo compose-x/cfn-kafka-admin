@@ -36,7 +36,7 @@ confluent-kafka = "^2.3"
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.7"
+black = ">=23.7,<25.0"
 isort = "^5.10"
 coverage = "^5.5"
 pytest = "^7.4"
