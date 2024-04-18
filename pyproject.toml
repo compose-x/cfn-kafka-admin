@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cfn_kafka_admin"
-version = "0.6.0-rc2"
+version = "0.6.0-rc3"
 description = "AWS CloudFormation Resources to manage Kafka"
 authors = ["John Mille <john@compose-x.io>"]
 classifiers = [
@@ -66,7 +66,7 @@ disable-timestamp = "true"
 github_url = "https://github.com/compose-x/cfn-kafka-admin"
 
 [tool.tbump.version]
-current = "0.6.0-rc2"
+current = "0.6.0-rc3"
 
 regex = '''
   (?P<major>\d+)
