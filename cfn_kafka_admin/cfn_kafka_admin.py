@@ -249,30 +249,38 @@ class KafkaStack:
         self.globals_config.update(
             {
                 "BootstrapServers": self.model.Globals.BootstrapServers.__root__,
-                "SASLUsername": self.model.Globals.SASLUsername.__root__
-                if self.model.Globals.SASLUsername
-                and self.model.Globals.SASLUsername.__root__
-                else Ref(AWS_NO_VALUE),
-                "SASLPassword": self.model.Globals.SASLPassword.__root__
-                if self.model.Globals.SASLPassword
-                and self.model.Globals.SASLPassword.__root__
-                else Ref(AWS_NO_VALUE),
-                "SASLMechanism": SASLMechanism[
-                    self.model.Globals.SASLMechanism.name
-                ].value
-                if self.model.Globals.SASLMechanism
-                and isinstance(self.model.Globals.SASLMechanism, SASLMechanism)
-                else self.model.Globals.SASLMechanism,
-                "SecurityProtocol": SecurityProtocol[
-                    self.model.Globals.SecurityProtocol.name
-                ].value
-                if self.model.Globals.SecurityProtocol
-                and isinstance(self.model.Globals.SecurityProtocol, SecurityProtocol)
-                else self.model.Globals.SecurityProtocol,
-                "ClientConfig": self.model.Globals.ClientConfig
-                if self.model.Globals.ClientConfig
-                and isinstance(self.model.Globals.ClientConfig, dict)
-                else Ref(AWS_NO_VALUE),
+                "SASLUsername": (
+                    self.model.Globals.SASLUsername.__root__
+                    if self.model.Globals.SASLUsername
+                    and self.model.Globals.SASLUsername.__root__
+                    else Ref(AWS_NO_VALUE)
+                ),
+                "SASLPassword": (
+                    self.model.Globals.SASLPassword.__root__
+                    if self.model.Globals.SASLPassword
+                    and self.model.Globals.SASLPassword.__root__
+                    else Ref(AWS_NO_VALUE)
+                ),
+                "SASLMechanism": (
+                    SASLMechanism[self.model.Globals.SASLMechanism.name].value
+                    if self.model.Globals.SASLMechanism
+                    and isinstance(self.model.Globals.SASLMechanism, SASLMechanism)
+                    else self.model.Globals.SASLMechanism
+                ),
+                "SecurityProtocol": (
+                    SecurityProtocol[self.model.Globals.SecurityProtocol.name].value
+                    if self.model.Globals.SecurityProtocol
+                    and isinstance(
+                        self.model.Globals.SecurityProtocol, SecurityProtocol
+                    )
+                    else self.model.Globals.SecurityProtocol
+                ),
+                "ClientConfig": (
+                    self.model.Globals.ClientConfig
+                    if self.model.Globals.ClientConfig
+                    and isinstance(self.model.Globals.ClientConfig, dict)
+                    else Ref(AWS_NO_VALUE)
+                ),
             }
         )
 
@@ -330,12 +338,16 @@ class KafkaStack:
             Definition=definition,
             Subject=Sub(f"${{{topic_name}.Name}}-{subject_suffix}"),
             RegistryUrl=registry_url,
-            RegistryUsername=registry_username
-            if isinstance(registry_username, Ref)
-            else registry_username.__root__,
-            RegistryPassword=registry_password
-            if isinstance(registry_password, Ref)
-            else registry_password.__root__,
+            RegistryUsername=(
+                registry_username
+                if isinstance(registry_username, Ref)
+                else registry_username.__root__
+            ),
+            RegistryPassword=(
+                registry_password
+                if isinstance(registry_password, Ref)
+                else registry_password.__root__
+            ),
             RegistryUserInfo=registry_userinfo.__root__,
             CompatibilityMode=CompatibilityMode[attribute.CompatibilityMode.name].value,
         )
@@ -463,9 +475,11 @@ class KafkaStack:
             topic_cfg.update(self.globals_config)
             topic_cfg.update(
                 {
-                    "ReplicationFactor": self.model.Topics.ReplicationFactor.__root__
-                    if not topic.ReplicationFactor
-                    else topic.ReplicationFactor,
+                    "ReplicationFactor": (
+                        self.model.Topics.ReplicationFactor.__root__
+                        if not topic.ReplicationFactor
+                        else topic.ReplicationFactor
+                    ),
                 }
             )
             if keypresent("Settings", topic_cfg) and not keyisset(
