@@ -42,6 +42,8 @@ Resources:
   LambdaLayerPermission:
     Condition: PublishLayerCon
     Type: AWS::Lambda::LayerVersionPermission
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
     Properties:
       LayerVersionArn: !Ref LambdaLayer
       Action: lambda:GetLayerVersion
