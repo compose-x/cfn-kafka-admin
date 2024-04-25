@@ -133,7 +133,6 @@ class KafkaSchema(ResourceProvider):
             schema_def = import_definition(self.get("Definition"))
             compatible = registry.post_compatibility_subject_versions(
                 subject_name=subject,
-                version_id="latest",
                 definition=schema_def,
                 schema_type=serializer,
             ).json()["is_compatible"]
