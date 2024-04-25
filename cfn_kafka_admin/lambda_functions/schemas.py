@@ -131,7 +131,7 @@ class KafkaSchema(ResourceProvider):
             subject = self.get("Subject")
             serializer = self.get("Serializer")
             schema_def = import_definition(self.get("Definition"))
-            compatible = registry.post_compatibility_subjects_versions(
+            compatible = registry.post_compatibility_subject_versions(
                 subject_name=subject,
                 version_id="latest",
                 definition=schema_def,
