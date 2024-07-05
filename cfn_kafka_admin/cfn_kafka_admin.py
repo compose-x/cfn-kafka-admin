@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2020-2021 John Mille <john@ews-network.net>
+# Copyright 2020-2024 John Mille <john@ews-network.net>
 
 
 """Main module."""

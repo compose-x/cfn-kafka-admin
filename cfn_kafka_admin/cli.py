@@ -1,6 +1,5 @@
-#  -*- coding: utf-8 -*-
 # SPDX-License-Identifier: MPL-2.0
-# Copyright 2020-2021 John Mille <john@ews-network.net>
+# Copyright 2020-2024 John Mille <john@ews-network.net>
 
 """Console script for aws_cfn_kafka_admin_provider."""
 
