@@ -70,8 +70,11 @@ def differentiate_old_new_acls(new_policies, old_policies):
 
 
 def set_binding_from_dict(policy: dict) -> AclBinding:
+    res_type: str = policy["ResourceType"]
+    if res_type == "CLUSTER":
+        res_type = "BROKER"
     new_acl: AclBinding = AclBinding(
-        restype=policy["ResourceType"],
+        restype=res_type,
         name=policy["Resource"],
         principal=policy["Principal"],
         host=policy["Host"] if "Host" in policy else "*",
