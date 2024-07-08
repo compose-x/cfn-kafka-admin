@@ -25,6 +25,7 @@ class KafkaTopic(AWSObject):
         "Name": (str, True),
         "PartitionsCount": (positive_integer, True),
         "Settings": (dict, False),
+        "ClientConfig": (dict, False),
     }
 
 
@@ -42,6 +43,7 @@ class KafkaAcl(AWSObject):
         "SASLUsername": (str, False),
         "SASLPassword": (str, False),
         "Policies": ([KafkaAclPolicy], True),
+        "ClientConfig": (dict, False),
     }
 
 
