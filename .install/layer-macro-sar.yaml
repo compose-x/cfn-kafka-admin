@@ -28,8 +28,9 @@ Conditions:
 Resources:
   LambdaLayer:
     Type: AWS::Serverless::LayerVersion
-    DeletionPolicy: Delete
+    DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
+    RetentionPolicy: Retain
     Properties:
       CompatibleRuntimes:
         - python3.10
