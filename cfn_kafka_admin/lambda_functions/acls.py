@@ -53,7 +53,7 @@ class KafkaACL(ResourceProvider):
         """
         set_client_info(self)
         try:
-            LOG.info(f"Connecting to {self.cluster_info['bootstrap_servers']}")
+            LOG.info(f"Connecting to {self.cluster_info['bootstrap.servers']}")
             LOG.info(f"Attempting to create new ACLs {self.get('Name')}")
             topic_name = create_new_acls(
                 self.get("Policies"),
