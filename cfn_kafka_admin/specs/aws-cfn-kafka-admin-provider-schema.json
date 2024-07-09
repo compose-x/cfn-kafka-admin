@@ -86,7 +86,9 @@
         "S3Store": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["BucketName"],
+          "required": [
+            "BucketName"
+          ],
           "properties": {
             "BucketName": {
               "type": "string",
@@ -98,6 +100,10 @@
               "pattern": "^[^/](.*)\/$"
             }
           }
+        },
+        "Metadata": {
+          "description": "Metadata to automatically add to AVRO schemas.",
+          "type": "object"
         }
       }
     }

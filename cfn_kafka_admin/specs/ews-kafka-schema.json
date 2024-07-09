@@ -85,6 +85,10 @@
         },
         "CompatibilityMode": {
           "$ref": "#/definitions/CompatibilityMode"
+        },
+        "Metadata": {
+          "description": "Metadata to automatically add to AVRO schemas.",
+          "type": "object"
         }
       }
     }

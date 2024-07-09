@@ -300,6 +300,35 @@ class KafkaStack:
             definition = attribute.Definition
             file_name = f"{topic_name}{SerializerDef[attribute.Serializer.name].value}{subject_suffix}Schema.json"
 
+        # Allows to insert metadata defined at the global or schema level automatically.
+        # This avoids having to edit all schemas one by one to edit properties.
+        # Only doing this for AVRO.
+        if attribute.Serializer == SerializerDef.AVRO:
+            try:
+                definition_dict = json.loads(definition)
+                if self.model.Schemas.Metadata and not attribute.Metadata:
+                    to_add_metadata: dict = deepcopy(self.model.Schemas.Metadata)
+                elif not self.model.Schemas.Metadata and attribute.Metadata:
+                    to_add_metadata: dict = deepcopy(attribute.Metadata)
+                elif self.model.Schemas.Metadata and attribute.Metadata:
+                    from .common import recursive_merge
+
+                    to_add_metadata = recursive_merge(
+                        self.model.Schemas.Metadata, attribute.Metadata
+                    )
+                else:
+                    to_add_metadata: dict = {}
+                for key in to_add_metadata.keys():
+                    if key not in definition_dict:
+                        definition_dict.update(self.model.Schemas.Metadata)
+                        print(f"Updated {file_name} with {key} metadata")
+                    else:
+                        print(f"Metadata {key} already defined in source schema.")
+                definition: str = json.dumps(definition_dict)
+            except json.JSONDecodeError:
+                print(f"Schema {file_name} is not a valid JSON. Not adding metadata.")
+                pass
+
         if self.model.Schemas.S3Store and file_name:
             s3_file_path = (
                 f"{self.model.Schemas.S3Store.PrefixPath}{FILE_PREFIX}{file_name}"
