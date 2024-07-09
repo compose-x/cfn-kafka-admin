@@ -19,7 +19,7 @@ license = "MPL-2.0"
 "Bug Tracker" = "https://github.com/compose-x/cfn-kafka-admin/issues"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 compose-x-common = "^1.4"
 jsonschema = "^4.21"
 importlib-resources = "^6.0"
@@ -30,8 +30,8 @@ datamodel-code-generator = { extras = ["http"], version = "^0.25" }
 aws-cfn-custom-resource-resolve-parser = "^0.3"
 cfn-resource-provider = "^1.0.7"
 retry2 = "^0.9.5"
-confluent-kafka = "^2.3"
-pydantic = "1.10.15"
+confluent-kafka = "^2.4"
+pydantic = "^2.8"
 
 [tool.poetry.scripts]
 aws-cfn-kafka-admin-provider = "cfn_kafka_admin.cli:main"
