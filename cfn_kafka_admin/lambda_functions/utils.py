@@ -51,10 +51,14 @@ def set_client_info(cfn_resource: ResourceProvider):
         try:
             define_cluster_info(cfn_resource)
         except Exception as error:
+            LOG.error("Failed to set properties for Kafka Cluster")
+            LOG.exception(error)
             cfn_resource.fail(str(error))
     else:
         cfn_resource.cluster_info = client_config
     try:
         cfn_resolve_string(cfn_resource)
     except Exception as error:
-        cfn_resource.fail(str(error))
+        LOG.error("Failed to retrieve Secret resolve string value.")
+        LOG.exception(error)
+        cfn_resource.fail("SecretsResolve failed " + str(error))
