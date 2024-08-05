@@ -85,6 +85,14 @@ def test_create_acls(compose_path):
                 "Action": "DESCRIBE",
                 "Effect": "ALLOW",
             },
+            {
+                "Resource": "kafka-cluster",
+                "PatternType": "LITERAL",
+                "Principal": "User:toto",
+                "ResourceType": "TRANSACTIONAL_ID",
+                "Action": "READ",
+                "Effect": "ALLOW",
+            },
         ]
         bindings: list[AclBinding] = [set_binding_from_dict(_acl) for _acl in new_acls]
         create_new_acls(
