@@ -20,7 +20,7 @@ from cfn_kafka_admin.kafka_resources.topics.delete import delete_topic
 from cfn_kafka_admin.kafka_resources.topics.update import update_kafka_topic
 from cfn_kafka_admin.models.admin import EwsKafkaTopic
 
-from .utils import cfn_resolve_string, define_cluster_info, set_client_info
+from .utils import set_client_info
 
 LOG = setup_logging(__name__)
 
